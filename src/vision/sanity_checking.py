@@ -51,7 +51,8 @@ def check_game_sanity(input_dict):
     The range is defined in the dictionary game_range_dict.
     If a value is not in the range it is set to -1.
 
-    :param input_dict: the dictionary to check
+    Parameters:
+        input_dict(dict): the dictionary to check
     """
     for key in game_range_dict:
         pos_range = game_range_dict[key]
@@ -68,7 +69,8 @@ def check_player_sanity(input_dict):
     The range is defined in the dictionary player_range_dict.
     If a value is not in the range it is set to -1.
 
-    :param input_dict: the dictionary to check
+    Parameters:
+        input_dict(dict): the dictionary to check
     """
     for key in player_range_dict:
         pos_range = player_range_dict[key]

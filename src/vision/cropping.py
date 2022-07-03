@@ -3,8 +3,11 @@ def crop_game_data(screenshot):
     Crops the game data from a screenshot taken in the match facts screen.
     Assumes the screenshot was taken in full screen and in the format 16:9.
 
-    :param screenshot: the taken screenshot
-    :return: cropped images of the game data
+    Parameters:
+        screenshot(image): screenshot from the match facts screen
+
+    Returns:
+        images(list): cropped images of the game data
     """
     images = []
     images.extend(crop_team_data(screenshot, True))
@@ -18,8 +21,11 @@ def crop_player_data(screenshot):
     Crops the player data from a screenshot taken in the player performance screen.
     Assumes the screenshot was taken in full screen and in the format 16:9.
 
-    :param screenshot: the taken screenshot
-    :return: cropped images of the player data
+    Parameters:
+        screenshot(image): screenshot from the player performance screen
+
+    Returns:
+        images(list): cropped images of the player data
     """
     images = [crop_rating(screenshot)]
     images.extend(crop_player_stats(screenshot))
@@ -32,8 +38,11 @@ def crop_rating(img):
     """
     Crops the rating from the image and returns the cropped image.
 
-    :param img: image of the player performance screen
-    :return: image that only contains the rating
+    Parameters:
+        img(image): image of the player performance screen
+
+    Returns:
+        img_rating(image): image that only contains the rating 
     """
     width, height = img.size
 
@@ -51,8 +60,11 @@ def crop_player_stats(img):
     """
     Crops the stats from the player performance screen. For every single stat an image is created.
 
-    :param img: image of the player performance screen
-    :return: list of every single stat as an image
+    Parameters:
+        img(image): image of the player performance screen
+
+    Returns:
+        images_stats(list): list of every single stat as an image
     """
     width, height = img.size
 
@@ -76,10 +88,13 @@ def crop_single_stat(img, pos, total_stats):
     """
     Crops a single stat at the given position.
 
-    :param img: image with all stats
-    :param pos: position of the stat to crop
-    :param total_stats: total number of stats in the image
-    :return: image of the single stat
+    Parameters:
+        img(image): image with all stats
+        pos(int): position of the stat to crop
+        total_stats(int): total number of stats in the image
+
+    Returns:
+        img_stat(image): image of the single stat
     """
     width, height = img.size
 
@@ -97,9 +112,12 @@ def crop_team_data(img, home):
     """
     Crops the team data of the match facts screen from either home or away team.
 
-    :param img: image of the match facts screen
-    :param home: defines if cropping is for home team
-    :return: list of every single stat as an image
+    Parameters:
+        img(image): image of the match facts screen
+        home(bool): defines if cropping is for the home team
+
+    Returns:
+        images_stats(list): list of every single stat as an image
     """
     width, height = img.size
 
@@ -132,9 +150,12 @@ def crop_team_side_data(img, home):
     """
     Crops the stats from the side of the match facts screen from either home or away team.
 
-    :param img: image of the match facts screen
-    :param home: defines if cropping is for home team
-    :return: list of every single stat as an image
+    Parameters:
+        img(image): image of the match facts screen
+        home(bool): defines if cropping is for home team
+
+    Returns:
+        images(list): list of every single stat as an image
     """
     width, height = img.size
 
@@ -167,8 +188,13 @@ def crop_team_side_data(img, home):
 
 def crop_name(img):
     """
-    :param img: image of the player performance screen
-    :return: image that only contains the name
+    Crops the name from the player performance screen.
+
+    Parameters:
+        img(image): iamge of the player performance screen
+
+    Returns:
+        img_name(image): image that only contains the name
     """
     width, height = img.size
 
@@ -177,18 +203,20 @@ def crop_name(img):
     right = width / 3.8
     bottom = height / 4
 
-    img_cropped = img.crop((left, top, right, bottom))
+    img_name = img.crop((left, top, right, bottom))
 
-    return img_cropped
-    # img_cropped.save(r'C:\Users\lukas\PycharmProjects\FifaStatReader\Stats\imageName.png')
+    return img_name
 
 
 def crop_card(img):
     """
     Crops the area of the player performance screen where a yellow/red card would be showed.
 
-    :param img: image of the player performance screen
-    :return: image of area where only the card is displayed
+    Parameters:
+        img(image): image of the player performance screen
+
+    Returns:
+        img_card(image):  image of area where only the card is displayed
     """
     width, height = img.size
 
@@ -197,6 +225,6 @@ def crop_card(img):
     right = width / 5.9
     bottom = height / 3.7
 
-    img_cropped = img.crop((left, top, right, bottom))
+    img_card = img.crop((left, top, right, bottom))
 
-    return img_cropped
+    return img_card

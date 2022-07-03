@@ -5,9 +5,6 @@ import pytesseract
 import cropping, util
 import sanity_checking as sc
 
-# only on windows: add pytesseract to path
-pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract'
-
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
 float_config = r'-c tessedit_char_whitelist=0123456789. --psm 10'
@@ -17,15 +14,25 @@ game_float_indices = [2, 20]
 player_float_indices = [0, 16, 17]
 
 
+def set_tesseract_path(path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
+    """
+    Sets the tesseract path through the given absolute path.
+    """
+    pytesseract.pytesseract.tesseract_cmd = path
+
+
 def get_game_data(screenshot):
     """
     Takes a screenshot taken in the match facts screen, then crops the data from the screenshot
     and reads the data with pytesseract. The data is stored in a dictionary on which a
-    'sanity check' is performed to filter out unlogical values. These values are marked by setting
+    'sanity check' is performed to filter out unlogical values. Unlogical values are marked by setting
     them to -1.
 
-    :param screenshot: screenshot taken in the match facts screen
-    :return: a dictionary that contains all relevant data from the match facts screen
+    Parameters:
+        screenshot(image): screenshot taken in the match facts screen
+
+    Returns:
+        game_dict(dict): dictionary that contains all relevant data from the match facts screen
     """
     images = cropping.crop_game_data(screenshot)
     data = []
@@ -36,7 +43,7 @@ def get_game_data(screenshot):
         else:
             data.append(get_number_from_image(np.array(images[i])))
 
-    game_dict = get_game_data_dict(data)
+    game_dict = get_game_dict(data)
     sc.check_game_sanity(game_dict)
 
     return game_dict
@@ -46,12 +53,15 @@ def get_player_data(screenshot, name=""):
     """
     Takes a screenshot taken in the player performance screen, then crops the data from the screenshot
     and reads the data with pytesseract. The data is stored in a dictionary on which a
-    'sanity check' is performed to filter out unlogical values. These values are marked by setting
+    'sanity check' is performed to filter out unlogical values. Unlogical values are marked by setting
     them to -1. A name can be passed to set the player name in the dictionary.
 
-    :param screenshot: screenshot taken in the player performance screen
-    :param name: name of the player to store in the dictionary
-    :return: a dictionary that contains all relevant data from the player performance screen
+    Parameters:
+        screenshot(image): screenshot taken in the player performance screen
+        name(string): name of the player to store in the dictionary
+
+    Returns:
+        player_dict(dict): dictionary that contains all relevant data from the player performance screen
     """
     images = cropping.crop_player_data(screenshot)
     data = []
@@ -64,23 +74,26 @@ def get_player_data(screenshot, name=""):
 
     data.extend(get_card_data(images[18]))
 
-    return get_player_data_dict(data, name)
+    return get_player_dict(data, name)
 
 
-def get_number_from_image(image, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):
+def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):
     """
     Reads an image that should only contain a single line of numbers and returns the result as a string.
     The image will be resized if the result is unclear. For every resize a max number of reads are performed.
     In order to accept the result a number of equal reads must be achieved. An unsuccessful read returns '-1'.
 
-    :param image: the image to read
-    :param max_reads_per_size: max reads per resize
-    :param max_resize_factor: max resizes
-    :param equal_reads_to_accept: number of equals reads the accept the result
-    :param config: custom config for the read
-    :return: text from image as a string
+    Parameters:
+        img(iamge): the image to read
+        max_reads_per_size(int): max reads per resize
+        max_resize_factor(int): max resizes
+        equal_reads_to_accept(int): number of equals reads the accept the result
+        config(string): custom config for tesseract
+    
+    Returns:
+        numbers(string): numbers from image
     """
-    height, width, channels = image.shape
+    height, width, channels = img.shape
 
     # uncomment to apply grayscale and thresholding filter - might improve performance
     # image = util.get_grayscale(image)
@@ -88,7 +101,7 @@ def get_number_from_image(image, max_reads_per_size=10, max_resize_factor=5, equ
 
     for size_factor in range(max_resize_factor):
         start_size = 1
-        image_resized = cv.resize(image, (width * (size_factor + start_size), height * (size_factor + start_size)))
+        image_resized = cv.resize(img, (width * (size_factor + start_size), height * (size_factor + start_size)))
 
         equal_reads = 1
         last_read = ""
@@ -117,46 +130,55 @@ def get_number_from_image(image, max_reads_per_size=10, max_resize_factor=5, equ
     return "-1"
 
 
-def get_game_data_dict(data):
+def get_game_dict(data):
     """
     Stores the data from a game given as a list in a dictionary.
 
-    :param data: data as list
-    :return: dictionary with data of game
+    Parameters: 
+        data(list): data to pass into dictionary
+
+    Returns:
+        game_dict(dict): dictionary with the data
     """
-    game_data_dict = {
-        "Possession": [int(data[0]), int(data[18])],
-        "Shots": [int(data[1]), int(data[19])],
-        "ExpectedGoals": [float(data[2]), float(data[20])],
-        "Passes": [int(data[3]), int(data[21])],
-        "Tackles": [int(data[4]), int(data[22])],
-        "TacklesWon": [int(data[5]), int(data[23])],
-        "Interceptions": [int(data[6]), int(data[24])],
-        "Saves": [int(data[7]), int(data[25])],
-        "FoulsCommitted": [int(data[8]), int(data[26])],
-        "Offsides": [int(data[9]), int(data[27])],
-        "Corners": [int(data[10]), int(data[28])],
-        "FreeKicks": [int(data[11]), int(data[29])],
-        "PenaltyKicks": [int(data[12]), int(data[30])],
-        "YellowCards": [int(data[13]), int(data[31])],
-        "RedCards": [int(data[14]), int(data[32])],
-        "DribbleSuccessRate": [int(data[15]), int(data[33])],
-        "ShotAccuracy": [int(data[16]), int(data[34])],
-        "PassAccuracy": [int(data[17]), int(data[35])]
+    half_length = int(len(data)/2)
+
+    game_dict = {
+        "Possession": [int(data[0]), int(data[0+half_length])],
+        "Shots": [int(data[1]), int(data[1+half_length])],
+        "ExpectedGoals": [float(data[2]), float(data[2+half_length])],
+        "Passes": [int(data[3]), int(data[3+half_length])],
+        "Tackles": [int(data[4]), int(data[4+half_length])],
+        "TacklesWon": [int(data[5]), int(data[5+half_length])],
+        "Interceptions": [int(data[6]), int(data[6+half_length])],
+        "Saves": [int(data[7]), int(data[7+half_length])],
+        "FoulsCommitted": [int(data[8]), int(data[8+half_length])],
+        "Offsides": [int(data[9]), int(data[9+half_length])],
+        "Corners": [int(data[10]), int(data[10+half_length])],
+        "FreeKicks": [int(data[11]), int(data[11+half_length])],
+        "PenaltyKicks": [int(data[12]), int(data[12+half_length])],
+        "YellowCards": [int(data[13]), int(data[13+half_length])],
+        "RedCards": [int(data[14]), int(data[14+half_length])],
+        "DribbleSuccessRate": [int(data[15]), int(data[15+half_length])],
+        "ShotAccuracy": [int(data[16]), int(data[16+half_length])],
+        "PassAccuracy": [int(data[17]), int(data[17+half_length])]
     }
 
-    return game_data_dict
+    return game_dict
 
 
-def get_player_data_dict(data, name):
+def get_player_dict(data, name):
     """
     Stores the data from a player given as a list in a dictionary.
 
-    :param data: data as list
-    :param name: name of the player
-    :return: dictionary with data and name of player
+    Parameters:
+        data(list): data to pass into dictionary
+        name(string): name of the player
+
+    Returns:
+        player_dict(dict): dictionary with the data
     """
-    player_data_dict = {
+
+    player_dict = {
         "Name": name,
         "Rating": float(data[0]),
         "Goals": int(data[1]),
@@ -180,7 +202,7 @@ def get_player_data_dict(data, name):
         "RedCard": int(data[19])
     }
 
-    return player_data_dict
+    return player_dict
 
 
 def get_card_data(img):
@@ -188,8 +210,12 @@ def get_card_data(img):
     Checks if a player has received a card during the game by checking the area
     where the card is displayed for its main color.
 
-    :param img: image that contains the area of the card
-    :return: list that says whether a player has a yellow or red card
+
+    Parameters:
+        img(image): image that contains the area of the card
+
+    Returns:
+        res(list): list that says whether a player has a yellow or red card
     """
     main_color = util.get_main_color(img)
 
