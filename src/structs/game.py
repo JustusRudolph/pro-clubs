@@ -6,6 +6,14 @@ from numpy import full
 from . import goal as goal_class
 from . import assist as assist_class
 
+curr_dir = os.getcwd()
+# get the path up until repo parent
+pro_clubs_index = curr_dir.find("pro-clubs")
+path_to_pro_clubs_root = curr_dir[:pro_clubs_index]
+# set global variable for path to game_data file
+FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
+                    + "pro-clubs/src/data/game_data.json")
+
 def read_json(path):
   """
   Read in json file from a given path and return the full struct
@@ -37,7 +45,7 @@ def write_json(full_data, path):
 
 class Game:
 
-  def __init__(self, ID, div, div_n_game, points_before, player_names,
+  def __init__(self, div, div_n_game, points_before, player_names,
                any="", home=True):
     """
     Parameters:
@@ -61,7 +69,10 @@ class Game:
 
     self.dict_to_write = {}  # to write in json at the end
 
-    self.dict_to_write["GAME_ID"] = ID
+    # get the most recent ID
+    prev_ID = read_json(FULL_GAME_DATA_PATH)[-1]["GAME_ID"]
+
+    self.dict_to_write["GAME_ID"] = prev_ID + 1
     self.dict_to_write["DIVISION"] = div
     self.dict_to_write["DIV_GAME_NO"] = div_n_game
     self.dict_to_write["POINTS_BEFORE"] = points_before
@@ -75,6 +86,7 @@ class Game:
     self.dict_to_write["GOALS_FOR"] = []
     self.dict_to_write["ASSISTS"] = []
     self.dict_to_write["GOALS_AGAINST"] = []
+    self.dict_to_write["PLAYER_DATA"] = []
 
 
   def add_goal_against(self, minute, pen=False):
@@ -134,7 +146,7 @@ class Game:
     """
     This function is triggered when the game ends, sets the final score
     """
-    self.dict_to_write["RESULTS"] = self.score.copy()
+    self.dict_to_write["RESULT"] = self.score.copy()
     res_type = ""
       
     if(self.score[0] > self.score[1]):  # home win
@@ -160,19 +172,28 @@ class Game:
     Take data that has been read by the computer from the final
     stats screen, and pass it as a dictionary for each player name.
 
+    This function can be called several times with each dict being
+    a different player, or be called once with all the data right away.
+
     Parameters:
       player_data(dict): Keys are player names, values are dicts of
                          data for several fields such as "shots".
     """
     
     for player_name in self.player_names:
-      all_data = player_data[player_name]
-      # The following is required since the structure isn't defined
-      # yet for reading using vision. TODO This is very beta
-      if ("NAME" not in all_data.keys()):
-        all_data["NAME"] = player_name
+      try:  # check if we have data for that player
+        all_data = player_data[player_name]
+        # The following is required since the structure isn't defined
+        # yet for reading using vision. TODO This is very beta
+        if ("NAME" not in all_data.keys()):
+          all_data["NAME"] = player_name
 
-      self.dict_to_write["PLAYER_DATA"].append(all_data)
+        # append data for this player
+        # TODO add checker that we don't add data twice
+        self.dict_to_write["PLAYER_DATA"].append(all_data)
+
+      except KeyError:  # if we don't have that player's data now
+        pass  # don't do anything
 
   
   def write_all_data(self):
@@ -180,14 +201,8 @@ class Game:
     Write the entire game data to the game_data.json file using
     the dict_to_write field that has been set throughout
     """
-    curr_dir = os.getcwd()
-    # get the path up until repo parent
-    pro_clubs_index = curr_dir.find("pro-clubs")
-    path_to_pro_clubs_root = curr_dir[:pro_clubs_index]
-    full_path = path_to_pro_clubs_root + "pro-clubs/src/data/game_data.json"
-    
-    curr_data = read_json(full_path)  # read game data before
+    curr_data = read_json(FULL_GAME_DATA_PATH)  # read game data before
 
     curr_data.append(self.dict_to_write)  # append this game's data
 
-    write_json(curr_data, full_path)  # write back to original file
+    write_json(curr_data, FULL_GAME_DATA_PATH)  # write back to original file
