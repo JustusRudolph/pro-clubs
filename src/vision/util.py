@@ -20,6 +20,10 @@ def take_screenshot(title, wait_time):
 
 
 def get_main_color(img):
+    """
+    :param img: image to check for main color
+    :return: main color of image in rgb format
+    """
     colors = img.getcolors(256)  # put a higher value if there are many colors in your image
     max_occurrence, most_present = 0, 0
     try:
@@ -29,6 +33,11 @@ def get_main_color(img):
         return most_present
     except TypeError:
         raise Exception("Too many colors in the image")
+
+
+# split word into list of its characters
+def split(word):
+    return [char for char in word]
 
 
 # get grayscale image

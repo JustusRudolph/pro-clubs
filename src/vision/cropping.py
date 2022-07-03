@@ -1,11 +1,6 @@
-import pygetwindow
-import time
-import pyautogui
-
-
 def crop_game_data(screenshot):
     """
-    Crops the game data from a screenshot taken in FIFA 22 in the match facts screen.
+    Crops the game data from a screenshot taken in the match facts screen.
     Assumes the screenshot was taken in full screen and in the format 16:9.
 
     :param screenshot: the taken screenshot
@@ -20,34 +15,46 @@ def crop_game_data(screenshot):
 
 def crop_player_data(screenshot):
     """
-    Crops the player data from a screenshot taken in FIFA 22 in the player performance screen.
+    Crops the player data from a screenshot taken in the player performance screen.
     Assumes the screenshot was taken in full screen and in the format 16:9.
 
     :param screenshot: the taken screenshot
     :return: cropped images of the player data
     """
     images = [crop_rating(screenshot)]
-    images.extend(crop_stats(screenshot))
+    images.extend(crop_player_stats(screenshot))
     images.append(crop_card(screenshot))
 
     return images
 
 
-def crop_rating(screenshot):
-    width, height = screenshot.size
+def crop_rating(img):
+    """
+    Crops the rating from the image and returns the cropped image.
+
+    :param img: image of the player performance screen
+    :return: image that only contains the rating
+    """
+    width, height = img.size
 
     left = width / 3.45
     top = height / 5.22
     right = width / 3.13
     bottom = height / 4.1
 
-    img_rating = screenshot.crop((left, top, right, bottom))
+    img_rating = img.crop((left, top, right, bottom))
 
     return img_rating
 
 
-def crop_stats(screenshot):
-    width, height = screenshot.size
+def crop_player_stats(img):
+    """
+    Crops the stats from the player performance screen. For every single stat an image is created.
+
+    :param img: image of the player performance screen
+    :return: list of every single stat as an image
+    """
+    width, height = img.size
 
     left = width / 1.12
     top = height / 3.78
@@ -55,7 +62,7 @@ def crop_stats(screenshot):
     bottom = height / 1.14
 
     # first crop all stats in a single image
-    img_stats = screenshot.crop((left, top, right, bottom))
+    img_stats = img.crop((left, top, right, bottom))
 
     # crop every single stat from the first image
     images_stats = []
@@ -66,6 +73,14 @@ def crop_stats(screenshot):
 
 
 def crop_single_stat(img, pos, total_stats):
+    """
+    Crops a single stat at the given position.
+
+    :param img: image with all stats
+    :param pos: position of the stat to crop
+    :param total_stats: total number of stats in the image
+    :return: image of the single stat
+    """
     width, height = img.size
 
     left = 0
@@ -78,8 +93,15 @@ def crop_single_stat(img, pos, total_stats):
     return img_stat
 
 
-def crop_team_data(screenshot, home):
-    width, height = screenshot.size
+def crop_team_data(img, home):
+    """
+    Crops the team data of the match facts screen from either home or away team.
+
+    :param img: image of the match facts screen
+    :param home: defines if cropping is for home team
+    :return: list of every single stat as an image
+    """
+    width, height = img.size
 
     if home:
         left = width / 2.9
@@ -93,17 +115,61 @@ def crop_team_data(screenshot, home):
         bottom = height / 1.1
 
     # first crop all stats in a single image
-    img_stats = screenshot.crop((left, top, right, bottom))
+    img_stats = img.crop((left, top, right, bottom))
 
     # crop every single stat from the first image
     images_stats = []
     for i in range(15):
         images_stats.append(crop_single_stat(img_stats, i + 1, 15))
 
+    # crop stats from the side
+    images_stats.extend(crop_team_side_data(img, home))
+
     return images_stats
 
 
+def crop_team_side_data(img, home):
+    """
+    Crops the stats from the side of the match facts screen from either home or away team.
+
+    :param img: image of the match facts screen
+    :param home: defines if cropping is for home team
+    :return: list of every single stat as an image
+    """
+    width, height = img.size
+
+    if home:
+        left = width / 6.4
+        right = width / 4.85
+    else:
+        left = width / 1.27
+        right = width / 1.18
+
+    images = []
+
+    top = height / 3.6
+    bottom = height / 3.05
+
+    images.append(img.crop((left, top, right, bottom)))
+
+    top = height / 1.92
+    bottom = height / 1.77
+
+    images.append(img.crop((left, top, right, bottom)))
+
+    top = height / 1.32
+    bottom = height / 1.24
+
+    images.append(img.crop((left, top, right, bottom)))
+
+    return images
+
+
 def crop_name(img):
+    """
+    :param img: image of the player performance screen
+    :return: image that only contains the name
+    """
     width, height = img.size
 
     left = width / 7.5
@@ -118,6 +184,12 @@ def crop_name(img):
 
 
 def crop_card(img):
+    """
+    Crops the area of the player performance screen where a yellow/red card would be showed.
+
+    :param img: image of the player performance screen
+    :return: image of area where only the card is displayed
+    """
     width, height = img.size
 
     left = width / 6
@@ -128,16 +200,3 @@ def crop_card(img):
     img_cropped = img.crop((left, top, right, bottom))
 
     return img_cropped
-
-
-def getImages():
-    my = pygetwindow.getWindowsWithTitle('FIFA 22')[0]
-    print(my)
-    my.activate()
-    time.sleep(1)
-
-    screenshot = pyautogui.screenshot()
-    images = [crop_name(screenshot), crop_rating(screenshot), crop_stats(screenshot)]
-
-    return images
-    # screenshot.save(r'C:\Users\lukas\PycharmProjects\FifaStatReader\Images\image.png')

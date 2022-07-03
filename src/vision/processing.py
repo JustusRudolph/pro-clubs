@@ -1,8 +1,9 @@
+import cv2 as cv
 import numpy as np
 import pytesseract
-import cv2 as cv
 
 import cropping, util
+import sanity_checking as sc
 
 # only on windows: add pytesseract to path
 pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract'
@@ -11,26 +12,52 @@ pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesse
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
 float_config = r'-c tessedit_char_whitelist=0123456789. --psm 10'
 
+# define indices where float is needed
+game_float_indices = [2, 20]
+player_float_indices = [0, 16, 17]
 
-def get_game_data():
-    images = cropping.crop_game_data(util.take_screenshot('FIFA 22', 1))
+
+def get_game_data(screenshot):
+    """
+    Takes a screenshot taken in the match facts screen, then crops the data from the screenshot
+    and reads the data with pytesseract. The data is stored in a dictionary on which a
+    'sanity check' is performed to filter out unlogical values. These values are marked by setting
+    them to -1.
+
+    :param screenshot: screenshot taken in the match facts screen
+    :return: a dictionary that contains all relevant data from the match facts screen
+    """
+    images = cropping.crop_game_data(screenshot)
     data = []
 
     for i in range(len(images)):
-        if i == 2 or i == 20:
+        if i in game_float_indices:
             data.append(get_number_from_image(np.array(images[i]), config=float_config))
         else:
             data.append(get_number_from_image(np.array(images[i])))
 
-    return get_game_data_dict(data)
+    game_dict = get_game_data_dict(data)
+    sc.check_game_sanity(game_dict)
+
+    return game_dict
 
 
-def get_player_data(name=""):
-    images = cropping.crop_player_data(util.take_screenshot('FIFA 22', 1))
+def get_player_data(screenshot, name=""):
+    """
+    Takes a screenshot taken in the player performance screen, then crops the data from the screenshot
+    and reads the data with pytesseract. The data is stored in a dictionary on which a
+    'sanity check' is performed to filter out unlogical values. These values are marked by setting
+    them to -1. A name can be passed to set the player name in the dictionary.
+
+    :param screenshot: screenshot taken in the player performance screen
+    :param name: name of the player to store in the dictionary
+    :return: a dictionary that contains all relevant data from the player performance screen
+    """
+    images = cropping.crop_player_data(screenshot)
     data = []
 
     for i in range(len(images)-1):
-        if i == 0 or i == 16 or i == 17:
+        if i in player_float_indices:
             data.append(get_number_from_image(np.array(images[i]), config=float_config))
         else:
             data.append(get_number_from_image(np.array(images[i])))
@@ -41,6 +68,18 @@ def get_player_data(name=""):
 
 
 def get_number_from_image(image, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):
+    """
+    Reads an image that should only contain a single line of numbers and returns the result as a string.
+    The image will be resized if the result is unclear. For every resize a max number of reads are performed.
+    In order to accept the result a number of equal reads must be achieved. An unsuccessful read returns '-1'.
+
+    :param image: the image to read
+    :param max_reads_per_size: max reads per resize
+    :param max_resize_factor: max resizes
+    :param equal_reads_to_accept: number of equals reads the accept the result
+    :param config: custom config for the read
+    :return: text from image as a string
+    """
     height, width, channels = image.shape
 
     # uncomment to apply grayscale and thresholding filter - might improve performance
@@ -79,6 +118,12 @@ def get_number_from_image(image, max_reads_per_size=10, max_resize_factor=5, equ
 
 
 def get_game_data_dict(data):
+    """
+    Stores the data from a game given as a list in a dictionary.
+
+    :param data: data as list
+    :return: dictionary with data of game
+    """
     game_data_dict = {
         "Possession": [int(data[0]), int(data[18])],
         "Shots": [int(data[1]), int(data[19])],
@@ -103,32 +148,14 @@ def get_game_data_dict(data):
     return game_data_dict
 
 
-def get_team_data_dict(team_data):
-    team_data_dict = {
-        "Possession": int(team_data[0]),
-        "Shots": int(team_data[1]),
-        "ExpectedGoals": float(team_data[2]),
-        "Passes": int(team_data[3]),
-        "Tackles": int(team_data[4]),
-        "TacklesWon": int(team_data[5]),
-        "Interceptions": int(team_data[6]),
-        "Saves": int(team_data[7]),
-        "FoulsCommitted": int(team_data[8]),
-        "Offsides": int(team_data[9]),
-        "Corners": int(team_data[10]),
-        "FreeKicks": int(team_data[11]),
-        "PenaltyKicks": int(team_data[12]),
-        "YellowCards": int(team_data[13]),
-        "RedCards": int(team_data[14]),
-        "DribbleSuccessRate": int(team_data[15]),
-        "ShotAccuracy": int(team_data[16]),
-        "PassAccuracy": int(team_data[17])
-    }
-
-    return team_data_dict
-
-
 def get_player_data_dict(data, name):
+    """
+    Stores the data from a player given as a list in a dictionary.
+
+    :param data: data as list
+    :param name: name of the player
+    :return: dictionary with data and name of player
+    """
     player_data_dict = {
         "Name": name,
         "Rating": float(data[0]),
@@ -157,6 +184,13 @@ def get_player_data_dict(data, name):
 
 
 def get_card_data(img):
+    """
+    Checks if a player has received a card during the game by checking the area
+    where the card is displayed for its main color.
+
+    :param img: image that contains the area of the card
+    :return: list that says whether a player has a yellow or red card
+    """
     main_color = util.get_main_color(img)
 
     if main_color[0] < 100:
@@ -165,5 +199,3 @@ def get_card_data(img):
         return [0, 1]
     else:
         return [1, 0]
-
-
