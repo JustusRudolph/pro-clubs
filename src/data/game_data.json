@@ -1,0 +1,53 @@
+[
+  {
+    "GAME_ID": 0,
+    "DIVISION": 4,
+    "DIV_GAME_NO": 5,
+    "POINTS_BEFORE": 12,
+    "RESULT": [1,1],
+    "RESULT_TYPE": "D",
+    "ANY": "Jutte",
+    "HOME": 0,
+    "GOALS_FOR": [
+      {
+        "ID": 0,
+        "MINUTE": 15,
+        "PLAYER_NAME": "Timbo",
+        "PENALTY": 0,
+        "ASSIST_ID": 0,
+        "SCORE": [0,1]
+      },
+      {}
+    ],
+    "ASSISTS": [
+      {
+        "ID": 0,
+        "GOAL_ID": 0,
+        "PLAYER_NAME": "Jutte"
+      }
+    ],
+    "GOALS_AGAINST": [
+      {
+        "MINUTE": 23,
+        "PENALTY": 0,
+        "SCORE": [1,1]
+      }
+    ],
+    "GAME_DATA": [
+      {
+        "POSSESSION":[50,50]
+      }
+    ],
+    "PLAYER_DATA": [
+      {
+        "NAME": "Timbo"
+      },
+      {
+        "NAME": "Jutte"
+      },
+      {
+        "NAME": "David"
+      }
+    ]
+  }
+]
