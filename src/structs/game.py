@@ -37,7 +37,20 @@ def write_json(full_data, path):
 
 class Game:
 
-  def __init__(self, ID, player_names, any="", home=True):
+  def __init__(self, ID, div, div_n_game, points_before, player_names,
+               any="", home=True):
+    """
+    Parameters:
+      ID(int): unique game ID
+      div(int): division of the game
+      div_n_game(int): nth game of the division (valid range 1-10)
+      points_before(int): Points before the game (needed in case not
+                          all games are stored)
+      player_names(list<str>): Names of all players in the game
+      any(str): Name of the player who is the any
+      home(bool): Whether or not the game is a home or away game
+    """
+    
     self.player_names = player_names
     self.home = home
     self.score = [0, 0]
@@ -49,12 +62,17 @@ class Game:
     self.dict_to_write = {}  # to write in json at the end
 
     self.dict_to_write["GAME_ID"] = ID
-    self.dict_to_write["HOME"] = int(home)
+    self.dict_to_write["DIVISION"] = div
+    self.dict_to_write["DIV_GAME_NO"] = div_n_game
+    self.dict_to_write["POINTS_BEFORE"] = points_before
     # put placeholders for 
     self.dict_to_write["RESULT"] = []
     self.dict_to_write["RESULT_TYPE"] = ""
+    # can set the following right away
     self.dict_to_write["ANY"] = any
-    self.dict_to_write["GOALS_FOR"] = []  # empty instead of nonexistent
+    self.dict_to_write["HOME"] = int(home)
+    # Empty lists is better than non-existent for analysing
+    self.dict_to_write["GOALS_FOR"] = []
     self.dict_to_write["ASSISTS"] = []
     self.dict_to_write["GOALS_AGAINST"] = []
 

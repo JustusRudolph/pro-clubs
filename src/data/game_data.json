@@ -1,7 +1,10 @@
 [
   {
     "GAME_ID": 0,
-    "RESULT": [0,0],
+    "DIVISION": 4,
+    "DIV_GAME_NO": 5,
+    "POINTS_BEFORE": 12,
+    "RESULT": [1,1],
     "RESULT_TYPE": "D",
     "ANY": "Jutte",
     "HOME": 0,
