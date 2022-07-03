@@ -107,7 +107,7 @@ class Game:
     self.dict_to_write["GOALS_AGAINST"].append(goal_dict)
 
 
-  def add_goal_for(self, minute, player_name, assister=None, pen=False):
+  def add_goal_for(self, minute, player_name, assister="", pen=False):
     """
     Simple function to add a goal to a player's tally
     and to the game in general
@@ -126,7 +126,7 @@ class Game:
     goal = goal_class.Goal(minute, self.score.copy(), player_name,
                            self.curr_goal_ID, is_pen=pen)
 
-    if (assister is not None):
+    if (assister != ""):  # Empty means no assister
       goal.add_assist(self.curr_assist_ID)
       assist = assist_class.Assist(self.curr_assist_ID, self.curr_goal_ID,
                                    assister)

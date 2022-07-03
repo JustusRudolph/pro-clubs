@@ -118,8 +118,8 @@ class GUI:
     
     if (self.add_goal_for):
       layout.append([sg.Text("Minute: "), sg.Input(key="minute")])
-      layout.append([sg.Text("Scorer: "), sg.Combo(self.players, key="scorer")])
-      layout.append([sg.Text("Assist: "), sg.Combo(self.players, key="assist")])
+      layout.append([sg.Text("Scorer: "), sg.Combo(self.players + ["AI"], key="scorer")])
+      layout.append([sg.Text("Assist: "), sg.Combo(self.players + ["AI"], key="assist")])
       layout.append([sg.Checkbox("Penalty: ", default=False, key="pen")])
       layout.append([sg.Button("Done")])
 
