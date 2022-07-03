@@ -9,20 +9,27 @@ def take_screenshot(title, wait_time):
     """
     Opens the application with the given window title, waits a certain amount of time and then takes a screenshot.
 
-    :param title: application title to take screenshot from
-    :param wait_time: time in seconds to wait before screenshot is taken
-    :return: the screenshot taken
-    """
-    window = pygetwindow.getWindowsWithTitle(title)[0]
-    window.activate()
-    time.sleep(wait_time)
-    return pyautogui.screenshot()
+    Parameters:
+        title(string): application title to take screenshot from
+        wait_time(float): time in seconds to wait before screenshot is taken
 
+    Returns:
+        screenshot(image): the taken screenshot
+    """
+    # not working
+    # window = pygetwindow.getWindowsWithTitle(title)[0]
+    # window.activate()
+    time.sleep(wait_time)
+    screenshot = pyautogui.screenshot()
+    return screenshot
 
 def get_main_color(img):
     """
-    :param img: image to check for main color
-    :return: main color of image in rgb format
+    Parameters:
+        img(image): image to check for main color
+
+    Returns:
+        main_color(tuple): main color of image in rgb format
     """
     colors = img.getcolors(256)  # put a higher value if there are many colors in your image
     max_occurrence, most_present = 0, 0
