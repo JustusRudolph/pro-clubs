@@ -39,10 +39,10 @@ def process_screenshots(screenshots, names, path='C:\\Program Files\\Tesseract-O
 
 
 # main function for testing
-if __name__ == "__main__":
-    screenshots = []
-    screenshots.append(screenshot_fifa())
-    input("taken first")
-    screenshots.append(screenshot_fifa())
-    input("taken second")
-    print(process_screenshots(screenshots, ["jutte"]))
+# if __name__ == "__main__":
+#     screenshots = []
+#     screenshots.append(screenshot_fifa())
+#     input("taken first")
+#     screenshots.append(screenshot_fifa())
+#     input("taken second")
+#     print(process_screenshots(screenshots, ["jutte"]))

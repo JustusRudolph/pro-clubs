@@ -1,4 +1,11 @@
-from ..static_data import valid_ranges
+import os
+import sys
+
+cwd = os.getcwd()
+parent = os.path.dirname(cwd)
+sys.path.insert(0, parent) 
+
+from static_data import vision_static_data
 
 def check_game_values(input_dict):
     """
@@ -9,8 +16,8 @@ def check_game_values(input_dict):
     Parameters:
         input_dict(dict): the dictionary to check
     """
-    for key in valid_ranges.game_exp_range_dict:
-        pos_range = valid_ranges.game_exp_range_dict[key]
+    for key in vision_static_data.game_exp_range_dict:
+        pos_range = vision_static_data.game_exp_range_dict[key]
         value = input_dict[key]
 
         for i in range(2):
@@ -27,8 +34,8 @@ def check_player_values(input_dict):
     Parameters:
         input_dict(dict): the dictionary to check
     """
-    for key in valid_ranges.player_exp_range_dict:
-        pos_range = valid_ranges.player_exp_range_dict[key]
+    for key in vision_static_data.player_exp_range_dict:
+        pos_range = vision_static_data.player_exp_range_dict[key]
         value = input_dict[key]
         if not (pos_range[0] <= value <= pos_range[1]):
             input_dict[key] = -1

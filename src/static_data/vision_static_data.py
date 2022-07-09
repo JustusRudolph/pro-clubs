@@ -1,5 +1,9 @@
 MAX_VALUE = 1000000
 
+# list with all attributes of the match facts screen
+game_data_attr = ["Possession", "Shots", "ExpectedGoals", "Passes",
+    "Tackles", "TacklesWon", "Interceptions"]
+
 # dictionary that defines the expected range for game data
 game_exp_range_dict = {
     "Possession": [20, 80],
