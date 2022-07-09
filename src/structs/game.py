@@ -89,25 +89,32 @@ class Game:
     self.dict_to_write["PLAYER_DATA"] = []
 
 
-  def add_goal_against(self, minute, pen=False):
+  def add_goal_against(self, minute, stoppage_time=None, pen=False, og=None):
     """
     Add a goal to the opponents tally
 
     Parameters:
       minute(int): Minute in which the goal was scored
+      stoppage_time(int): the minute in stoppage time.
+                          Only not None when minute is 45 or 90
+      pen(bool): If the goal is a penalty
+      og(str): If the goal is an own goal, this will be the name
+                of the player who scored it
     """
     if (self.home):
       self.score[1] += 1
     else:
       self.score[0] += 1
 
-    goal = goal_class.Goal(minute, tuple(self.score), is_pen=pen)
+    goal = goal_class.Goal(minute, tuple(self.score), stoppage_time=stoppage_time,
+                           is_pen=pen, og=og)
     # get the goal in neat dict form to write to json
     goal_dict = goal.get_dict_struct()
     self.dict_to_write["GOALS_AGAINST"].append(goal_dict)
 
 
-  def add_goal_for(self, minute, player_name, assister="", pen=False):
+  def add_goal_for(self, minute, player_name="", assister="", stoppage_time=None,
+                   pen=False, og=False):
     """
     Simple function to add a goal to a player's tally
     and to the game in general
@@ -117,14 +124,17 @@ class Game:
       player_name(str): Name of player who scored the goal
       assister(str): Name of the player who assisted. If none then
                      no assist is written.
+      pen(bool): If the goal is a penalty
+      og(bool): If the goal is an own goal
     """
     if (self.home):
       self.score[0] += 1
     else:
       self.score[1] += 1
 
-    goal = goal_class.Goal(minute, self.score.copy(), player_name,
-                           self.curr_goal_ID, is_pen=pen)
+    goal = goal_class.Goal(minute, self.score.copy(), stoppage_time=stoppage_time,
+                           player_name=player_name, id=self.curr_goal_ID, is_pen=pen,
+                           og=og)
 
     if (assister != ""):  # Empty means no assister
       goal.add_assist(self.curr_assist_ID)

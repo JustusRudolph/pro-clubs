@@ -1,4 +1,3 @@
-from __future__ import division
 import PySimpleGUI as sg
 
 from structs import game
@@ -139,15 +138,19 @@ class GUI:
       layout.append([sg.Button("Done")])  # signal to programme that the above two are set
     
     if (self.add_goal_for):
-      layout.append([sg.Text("Minute: "), sg.Input(key="minute")])
+      layout.append([sg.Text("Minute: "), sg.Input(key="minute"),
+                     sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
       layout.append([sg.Text("Scorer: "), sg.Combo(self.players + ["AI"], key="scorer")])
       layout.append([sg.Text("Assist: "), sg.Combo(self.players + ["AI"], key="assist")])
       layout.append([sg.Checkbox("Penalty: ", default=False, key="pen")])
+      layout.append([sg.Checkbox("Own Goal: ", default=False, key="og")])
       layout.append([sg.Button("Done")])
 
     elif (self.add_goal_against):
-      layout.append([sg.Text("Minute: "), sg.Input(key="minute")])
+      layout.append([sg.Text("Minute: "), sg.Input(key="minute"),
+                     sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
       layout.append([sg.Checkbox("Penalty: ", default=False, key="pen")])
+      layout.append([sg.Text("Own Goal"), sg.Combo(self.players + ["AI"], key="og")])
       layout.append([sg.Button("Done")])
 
     return layout
@@ -293,18 +296,39 @@ class GUI:
     elif ((self.curr_event == "Done") and self.add_goal_for):
       self.add_goal_for = False  # unset after finishing
       minute = int(self.curr_values["minute"])
+      # don't convert stoppage time to int yet, need to check if it exists
+      try:
+        stoppage_time = int(self.curr_values["stoppage"])
+      except ValueError:
+        stoppage_time = None  # if not an int, we reset to nonexistent
+      
       scorer = self.curr_values["scorer"]
       assist = self.curr_values["assist"]
       pen = self.curr_values["pen"]
-      self.game.add_goal_for(minute, scorer, assister=assist, pen=pen)
+      og = self.curr_values["og"]
+
+      self.game.add_goal_for(minute, player_name=scorer, assister=assist, pen=pen,
+                             stoppage_time=stoppage_time, og=og)
+
       new_layout = self.create_game_layout()
 
 
     elif ((self.curr_event == "Done") and self.add_goal_against):
       self.add_goal_against = False  # unset after finishing
       minute = int(self.curr_values["minute"])
+      # don't convert stoppage time to int yet, need to check if it exists
+      try:
+        stoppage_time = int(self.curr_values["stoppage"])
+      except ValueError:
+        stoppage_time = None  # if not an int, we reset to nonexistent
       pen = self.curr_values["pen"]
-      self.game.add_goal_against(minute, pen=pen)
+      og = self.curr_values["og"]  # this will hold a string now
+
+      if (not og):  # if own goal assister is "", aka it's not an own goal
+        self.game.add_goal_against(minute, stoppage_time=stoppage_time, pen=pen)
+      else:  # there is an own goal assister, so definitely not a pen
+        self.game.add_goal_against(minute, stoppage_time=stoppage_time, og=og)
+
       new_layout = self.create_game_layout()
 
     elif (self.curr_event == "Finish Game"):
@@ -364,6 +388,9 @@ class GUI:
     Accesses the won/lost field in the Game object, thus must be called
     after game.end_game()
     """
+    # unset the game so the next game instance can overwrite the current one
+    self.game_set = False
+
     game_res = self.game.dict_to_write["RESULT_TYPE"]
     
     if (game_res == "W"):
