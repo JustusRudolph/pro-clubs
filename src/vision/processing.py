@@ -3,7 +3,7 @@ import numpy as np
 import pytesseract
 
 import cropping, util
-import value_checking as vc
+import dict_creater as dc
 
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
@@ -11,7 +11,7 @@ float_config = r'-c tessedit_char_whitelist=0123456789. --psm 10'
 
 # define indices where float is needed
 game_float_indices = [2, 20]
-player_float_indices = [0, 16, 17]
+player_float_indices = [0, 16, 17, 21, 41]
 
 
 def set_tesseract_path(path):
@@ -44,12 +44,12 @@ def get_game_data(screenshot):
             data.append(get_number_from_image(np.array(images[i])))
 
     game_dict = get_game_dict(data)
-    vc.check_game_values(game_dict)
+    dc.check_game_values(game_dict)
 
     return game_dict
 
 
-def get_player_data(screenshot, name=""):
+def get_player_data(screenshots, name=""):
     """
     Takes a screenshot taken in the player performance screen, then crops the data from the screenshot
     and reads the data with pytesseract. The data is stored in a dictionary on which a
@@ -63,18 +63,18 @@ def get_player_data(screenshot, name=""):
     Returns:
         player_dict(dict): dictionary that contains all relevant data from the player performance screen
     """
-    images = cropping.crop_player_data(screenshot)
+    images = cropping.crop_player_data(screenshots)
     data = []
 
-    for i in range(len(images)-1):
-        if i in player_float_indices:
+    for i in range(len(images)):
+        if i==18: # index of image with card area
+            data.extend(get_card_data(images[i]))
+        elif i in player_float_indices:
             data.append(get_number_from_image(np.array(images[i]), config=float_config))
         else:
             data.append(get_number_from_image(np.array(images[i])))
 
-    data.extend(get_card_data(images[18]))
-
-    return get_player_dict(data, name)
+    return data # get_player_dict(data, name)
 
 
 def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):

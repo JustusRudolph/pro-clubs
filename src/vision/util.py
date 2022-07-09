@@ -1,27 +1,32 @@
-import pyautogui
-import pygetwindow
+import pyautogui, pywinauto, pygetwindow as gw
 import time
 import cv2 as cv
 import numpy as np
 
 
-def take_screenshot(title, wait_time):
+def take_screenshot(wait_time):
     """
-    Opens the application with the given window title, waits a certain amount of time and then takes a screenshot.
+    Waits the given time and then takes a screenshot of the active application.
 
     Parameters:
-        title(string): application title to take screenshot from
         wait_time(float): time in seconds to wait before screenshot is taken
 
     Returns:
         screenshot(image): the taken screenshot
     """
-    # not working
-    # window = pygetwindow.getWindowsWithTitle(title)[0]
-    # window.activate()
     time.sleep(wait_time)
     screenshot = pyautogui.screenshot()
     return screenshot
+
+
+def focus_to_window(window_title=None):
+    """
+    Sets the focus to the window with the given title.
+    """
+    window = gw.getWindowsWithTitle(window_title)[0]
+    if window.isActive == False:
+        pywinauto.application.Application().connect(handle=window._hWnd).top_window().set_focus()
+
 
 def get_main_color(img):
     """
