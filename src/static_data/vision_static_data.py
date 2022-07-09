@@ -1,8 +1,21 @@
 MAX_VALUE = 1000000
 
-# list with all attributes of the match facts screen
+# list with all attributes from the match facts screen
 game_data_attr = ["Possession", "Shots", "ExpectedGoals", "Passes",
-    "Tackles", "TacklesWon", "Interceptions"]
+    "Tackles", "TacklesWon", "Interceptions", "Saves", "Saves", "FoulsCommitted", "Offsides",
+    "Corners", "FreeKicks", "PenaltyKicks", "YellowCards", "RedCards", "DribbleSuccessRate",
+    "ShotAccuracy", "PassAccuracy"]
+
+# list with all attributes from the player performance screen
+player_data_attr = ["Rating", "Goals", "Assists", "Shots", "ShotAccuracy", "Passes", "PassAccuracy",
+    "Dribbles", "DribbleSuccessRate", "Tackles", "TackleSuccessRate", "Offsides", "FoulsCommitted",
+    "PossessionWon", "PossessionLost", "MinutesPlayed", "DistanceCovered", "DistanceSprinted", "YellowCard",
+    "RedCard", "Possession", "DribblesCompleted", "DistanceDribbled", "FoulsWon", "PenaltiesWon", "RegularDribble",
+    "ShieldDribble", "StrafeDribble", "Beat", "SkillmoveBeat", "Nutmeg", "KnockOns", "ShotsOnTarget",
+    "ShotsOffTarget", "ShotsBlocked", "NormalShots", "FinesseShots", "HeaderShots", "LowShots", "VolleyShots", "ChipShots",
+    "SetPiecesShots", "ExpectedAssits", "PassesCompleted", "PassesIntercepted", "OffsidePasses", "GroundPasses", "LobPasses",
+    "ThroughPasses", "LoftedThroughPasses", "Crosses", "PassesSetPieces", "AirDuelsWon", "BeatenByOpponent"]
+
 
 # dictionary that defines the expected range for game data
 game_exp_range_dict = {
@@ -47,7 +60,41 @@ player_exp_range_dict = {
     "DistanceCovered": [0, 100],
     "DistanceSprinted": [0, 100],
     "YellowCard": [0, 1],
-    "RedCard": [0, 1]
+    "RedCard": [0, 1],
+    "Possession": [0, 50],
+    "DribblesCompleted": [0, 20],
+    "DistanceDribbled": [0, 10],
+    "FoulsWon": [0, 10],
+    "PenaltiesWon": [0, 3],
+    "RegularDribble": [0, 10],
+    "ShieldDribble": [0, 10],
+    "StrafeDribble": [0, 10],
+    "Beat": [0, 20],
+    "SkillmoveBeat": [0, 10],
+    "Nutmeg": [0, 3],
+    "KnockOns": [0, 20],
+    "ShotsOnTarget": [0, 15],
+    "ShotsOffTarget": [0, 15],
+    "ShotsBlocked": [0, 10],
+    "NormalShots": [0, 20],
+    "FinesseShots": [0, 20],
+    "HeaderShots": [0, 10],
+    "LowShots": [0, 20],
+    "VolleyShots": [0, 20],
+    "ChipShots": [0, 10],
+    "SetPiecesShots": [0, 10],
+    "ExpectedAssits": [0, 10],
+    "PassesCompleted": [0, 100],
+    "PassesIntercepted": [0, 50], # passes that have been played by yourself but have been intercepted
+    "OffsidePasses": [0, 20],
+    "GroundPasses": [0, 100],
+    "LobPasses": [0, 100],
+    "ThroughPasses": [0, 100],
+    "LoftedThroughPasses": [0, 100],
+    "Crosses": [0, 20],
+    "PassesSetPieces": [0, 30],
+    "AirDuelsWon": [0, 20],
+    "BeatenByOpponent": [0, 20]
 }
 
 # dictionary that defines the valid range for game data
@@ -69,7 +116,7 @@ game_valid_range_dict = {
     "RedCards": [0, 11],
     "DribbleSuccessRate": [0, 100],
     "ShotAccuracy": [0, 100],
-    "PassAccuracy": [40, 100]
+    "PassAccuracy": [0, 100]
 }
 
 # dictionary that defines the valid range for player data
@@ -93,5 +140,39 @@ player_valid_range_dict = {
     "DistanceCovered": [0, MAX_VALUE],
     "DistanceSprinted": [0, MAX_VALUE],
     "YellowCard": [0, 1],
-    "RedCard": [0, 1]
+    "RedCard": [0, 1],
+    "Possession": [0, 100],
+    "DribblesCompleted": [0, MAX_VALUE],
+    "DistanceDribbled": [0, MAX_VALUE],
+    "FoulsWon": [0, MAX_VALUE],
+    "PenaltiesWon": [0, MAX_VALUE],
+    "RegularDribble": [0, MAX_VALUE],
+    "ShieldDribble": [0, MAX_VALUE],
+    "StrafeDribble": [0, MAX_VALUE],
+    "Beat": [0, MAX_VALUE],
+    "SkillmoveBeat": [0, MAX_VALUE],
+    "Nutmeg": [0, MAX_VALUE],
+    "KnockOns": [0, MAX_VALUE],
+    "ShotsOnTarget": [0, MAX_VALUE],
+    "ShotsOffTarget": [0, MAX_VALUE],
+    "ShotsBlocked": [0, MAX_VALUE],
+    "NormalShots": [0, MAX_VALUE],
+    "FinesseShots": [0, MAX_VALUE],
+    "HeaderShots": [0, MAX_VALUE],
+    "LowShots": [0, MAX_VALUE],
+    "VolleyShots": [0, MAX_VALUE],
+    "ChipShots": [0, MAX_VALUE],
+    "SetPiecesShots": [0, MAX_VALUE],
+    "ExpectedAssits": [0, MAX_VALUE],
+    "PassesCompleted": [0, MAX_VALUE],
+    "PassesIntercepted": [0, MAX_VALUE], # passes that have been played by yourself but have been intercepted
+    "OffsidePasses": [0, MAX_VALUE],
+    "GroundPasses": [0, MAX_VALUE],
+    "LobPasses": [0, MAX_VALUE],
+    "ThroughPasses": [0, MAX_VALUE],
+    "LoftedThroughPass": [0, MAX_VALUE],
+    "Crosses": [0, MAX_VALUE],
+    "PassesSetPieces": [0, MAX_VALUE],
+    "AirDuelsWon": [0, MAX_VALUE],
+    "BeatenByOpponent": [0, MAX_VALUE]
 }
