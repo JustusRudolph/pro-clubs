@@ -60,5 +60,40 @@
         "NAME": "David"
       }
     ]
+  },
+  {
+    "GAME_ID": 1,
+    "DIVISION": 2,
+    "DIV_GAME_NO": 1,
+    "POINTS_BEFORE": 3,
+    "RESULT": [
+      1,
+      0
+    ],
+    "RESULT_TYPE": "W",
+    "ANY": "Jutte",
+    "HOME": 1,
+    "GOALS_FOR": [
+      {
+        "MINUTE": 10,
+        "SCORE": [
+          1,
+          0
+        ],
+        "PENALTY": 0,
+        "ID": 0,
+        "PLAYER_NAME": "DJ",
+        "ASSIST_ID": 0
+      }
+    ],
+    "ASSISTS": [
+      {
+        "ID": 0,
+        "GOAL_ID": 0,
+        "PLAYER_NAME": "Jutte"
+      }
+    ],
+    "GOALS_AGAINST": [],
+    "PLAYER_DATA": []
   }
 ]

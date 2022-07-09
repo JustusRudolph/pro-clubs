@@ -42,9 +42,17 @@ class GUI:
 
   def create_window(self):
     """
-    Updates/Creates a window from the current layout
+    Creates a new window from the current layout
     """
     self.window = sg.Window("Pro Clubs Tracker", self.layout)
+
+  def update_window(self):
+    """
+    Deletes the current window and creates a new window with the
+    current layout
+    """
+    self.window.close()
+    self.create_window()
 
 
   def create_session_layout(self):
@@ -189,7 +197,7 @@ class GUI:
     if (self.curr_event == "New Session"):
       new_layout = self.create_session_layout()
       self.layout = new_layout
-      self.create_window()  # update the window
+      self.update_window()  # update the window
       self.curr_state = "Session"
       return 0  # as expected
 
@@ -221,7 +229,7 @@ class GUI:
 
       new_layout = self.create_pre_game_layout()
       self.layout = new_layout
-      self.create_window()  # update the window
+      self.update_window()  # update the window
       self.curr_state = "Pre-Game"
 
       print(f"Starting new session with players: {self.players}.")
@@ -240,7 +248,7 @@ class GUI:
     if (self.curr_event == "Start new game"):
       new_layout = self.create_game_layout()
       self.layout = new_layout
-      self.create_window()  # update the window
+      self.update_window()  # update the window
       self.curr_state = "In-Game-unset"
       
       return 0
@@ -248,7 +256,7 @@ class GUI:
     elif (self.curr_event == "Change players"):
       new_layout = self.create_player_change_layout()
       self.layout = new_layout
-      self.create_window()  # update the window
+      self.update_window()  # update the window
       self.curr_state = "PlayerChange"
 
       return 0
@@ -265,7 +273,7 @@ class GUI:
 
       new_layout = self.create_pre_game_layout()
       self.layout = new_layout
-      self.create_window()  # update the window
+      self.update_window()  # update the window
       self.curr_state = "Pre-Game"
 
       return 0
@@ -331,7 +339,7 @@ class GUI:
 
     # reset window in all cases except for failure (else return 1)
     self.layout = new_layout
-    self.create_window()
+    self.update_window()
     
     return 0
 
@@ -355,7 +363,7 @@ class GUI:
       self.curr_state = "Pre-Game"
       new_layout = self.create_pre_game_layout()  # go back to pregame
       self.layout = new_layout
-      self.create_window()
+      self.update_window()
     
       return 0
 
