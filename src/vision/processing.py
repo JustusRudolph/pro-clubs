@@ -3,7 +3,7 @@ import numpy as np
 import pytesseract
 
 import cropping, util
-import sanity_checking as sc
+import value_checking as vc
 
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
@@ -14,7 +14,7 @@ game_float_indices = [2, 20]
 player_float_indices = [0, 16, 17]
 
 
-def set_tesseract_path(path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
+def set_tesseract_path(path):
     """
     Sets the tesseract path through the given absolute path.
     """
@@ -44,7 +44,7 @@ def get_game_data(screenshot):
             data.append(get_number_from_image(np.array(images[i])))
 
     game_dict = get_game_dict(data)
-    sc.check_game_sanity(game_dict)
+    vc.check_game_values(game_dict)
 
     return game_dict
 
@@ -84,7 +84,7 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
     In order to accept the result a number of equal reads must be achieved. An unsuccessful read returns '-1'.
 
     Parameters:
-        img(iamge): the image to read
+        img(image): the image to read
         max_reads_per_size(int): max reads per resize
         max_resize_factor(int): max resizes
         equal_reads_to_accept(int): number of equals reads the accept the result
@@ -112,6 +112,9 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
             if len(number) == 0:
                 break
             else:
+                # check if first character is a dot
+                if util.split(number[0])[0] == '.':
+                    continue
                 # check if the first character is '0' and the following character is not '.' or '0',
                 # then the read was invalid
                 if len(util.split(number[0])) > 1:

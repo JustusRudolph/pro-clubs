@@ -3,7 +3,7 @@ import processing
 from util import take_screenshot
 
 
-def screenshot_fifa(wait_time):
+def screenshot_fifa(wait_time=2):
     """
     Takes a screenshot in FIFA 22. It first opens FIFA,
     then waits the given wait_time in seconds and returns the taken screenshot.
@@ -11,7 +11,7 @@ def screenshot_fifa(wait_time):
     return take_screenshot('FIFA 22', wait_time)
 
 
-def process_screenshots(screenshots, names):
+def process_screenshots(screenshots, names, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
     """
     Takes a list of screenshots and reads the relevant data from them.
     The first screenshot must be the match facts screen. Then the player performance screens follow.
@@ -26,7 +26,7 @@ def process_screenshots(screenshots, names):
         dicts(list): list of dictionaries with the full data read in the screenshots
     """
     if(platform.system() == "Windows"):
-        processing.set_tesseract_path()
+        processing.set_tesseract_path(path)
 
     dicts = []
 
@@ -41,12 +41,8 @@ def process_screenshots(screenshots, names):
 # main function for testing
 # if __name__ == "__main__":
 #     screenshots = []
-#     screenshot = screenshot_fifa()
-#     # screenshot.show()
-#     screenshots.append(screenshot)
-#     input()
 #     screenshots.append(screenshot_fifa())
-#     input()
+#     input("taken first")
 #     screenshots.append(screenshot_fifa())
-# 
-#     print(process_screenshots(screenshots, ["jutte", "timbo"]))
+#     input("taken second")
+#     print(process_screenshots(screenshots, ["jutte"]))

@@ -45,7 +45,7 @@ player_range_dict = {
 }
 
 
-def check_game_sanity(input_dict):
+def check_game_values(input_dict):
     """
     Checks if the values of the given dictionary match the possible range for a game.
     The range is defined in the dictionary game_range_dict.
@@ -63,7 +63,7 @@ def check_game_sanity(input_dict):
                 input_dict[key][i] = -1
 
 
-def check_player_sanity(input_dict):
+def check_player_values(input_dict):
     """
     Checks if the values of the given dictionary match the possible range for a player.
     The range is defined in the dictionary player_range_dict.

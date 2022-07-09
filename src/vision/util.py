@@ -42,8 +42,10 @@ def get_main_color(img):
         raise Exception("Too many colors in the image")
 
 
-# split word into list of its characters
 def split(word):
+    """
+    Splits a string into list of its characters.
+    """
     return [char for char in word]
 
 
