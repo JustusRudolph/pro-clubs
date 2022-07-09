@@ -1,6 +1,8 @@
+from __future__ import division
 import PySimpleGUI as sg
 
 from structs import game
+from static_data import static_game_data as sgd
 
 class GUI:
   
@@ -13,7 +15,7 @@ class GUI:
     ]
     self.players = []
     self.curr_div = 0
-    self.n_games_played = 0
+    self.n_games_played = 0  # number of games played in the division
     self.curr_points = 0
     self.curr_n_game = 1  # 1st game, "index" from 1
     self.game = 0  # empty for now
@@ -40,6 +42,11 @@ class GUI:
     self.add_goal_against = False
 
 
+  ############################
+  ##### WINDOW FUNCTIONS #####
+  ######################################################################
+  ### These are related to obtaining windows from the current layout ###
+  ######################################################################
   def create_window(self):
     """
     Creates a new window from the current layout
@@ -55,6 +62,11 @@ class GUI:
     self.create_window()
 
 
+  ############################
+  ##### LAYOUT FUNCTIONS #####
+  #########################################################
+  ### These define the layouts for the different states ###
+  #########################################################
   def create_session_layout(self):
     layout = [
       [sg.Text("Who is playing? Pressing the button is toggling player on/off. Default is off.")],
@@ -78,15 +90,17 @@ class GUI:
     curr_players_str = ""  # create nice print of players
     for i in range(len(self.players)):
       plr = self.players[i]
-      if (i == (len(self.players)-1)):
+      if (i == (len(self.players)-1)):  # add full stop in the end
         curr_players_str += " and " + plr + "."
-      else:
+      elif (i==0):  # don't add comma before the first player
+        curr_players_str += plr
+      else:  # add comma and then the name of the next player
         curr_players_str += ", " + plr
     
     # create string for current status of session
     curr_status_str = f"In division {self.curr_div} with"
-    curr_status_str += f" {self.curr_points} from {self.n_games_played}"
-    curr_status_str += " games played."
+    curr_status_str += f" {self.curr_points} points from"
+    curr_status_str += f" {self.n_games_played} games played."
     
     layout = [
       [sg.Text("Current players: " + curr_players_str)],
@@ -149,47 +163,12 @@ class GUI:
 
     return layout
 
-  def show(self):
-    """
-    Show the GUI window
-    """
-    while (True):
 
-      self.curr_event, self.curr_values = self.window.read()
-      print(self.curr_event, type(self.curr_event), self.curr_values)
-      
-      if ((self.curr_event == sg.WIN_CLOSED) or (self.curr_event == "Exit")):
-        break
-      
-      # Now run different options dependent on the state
-      if (self.curr_state == "Start"):
-        failed = self.run_startup_options()
-
-      elif (self.curr_state == "Session"):
-        failed = self.run_session_creation_options()
-
-      elif (self.curr_state == "Pre-Game"):
-        failed = self.run_pre_game_options()
-
-      elif (self.curr_state == "PlayerChange"):
-        failed = self.run_player_change_options()
-
-      elif ((self.curr_state == "In-Game-unset") or
-            (self.curr_state == "In-Game-set")):
-        failed = self.run_in_game_options()
-
-      elif (self.curr_state == "Post-Game"):
-        failed = self.run_post_game_options()
-
-      else:  # some unaccounted for case
-        print("Exiting.")
-        break
-
-      if (failed):  # running through startup options failed
-        break
-
-    self.window.close()
-
+  ###################################
+  ##### OPTION/VISUAL FUNCTIONS #####
+  ###############################################################
+  ### These check the inputs from the gui in different states ###
+  ###############################################################
   def run_startup_options(self):
     """
     Current window is startup: Run through all options
@@ -329,8 +308,10 @@ class GUI:
       new_layout = self.create_game_layout()
 
     elif (self.curr_event == "Finish Game"):
+      # Game is over, need to set several things now
       self.curr_state = "Post-Game"
-      self.game.end_game()
+      self.game.end_game()  # write to game_data.json with the game object
+      self.end_game()  # update internal data for next game such as division
       # only time we create a post game window is in this case
       new_layout = self.create_post_game_layout()
 
@@ -370,3 +351,146 @@ class GUI:
     else:
       return 1  # unexpected
       
+  ###################################
+  ##### DATA AMENDING FUNCTIONS #####
+  ##########################################################################
+  ### These functions do not affect the GUI but change values internally ###
+  ##########################################################################
+  def end_game(self):
+    """
+    Changes the current points and games played. If a division is changed
+    subsequently then that is changed too.
+
+    Accesses the won/lost field in the Game object, thus must be called
+    after game.end_game()
+    """
+    game_res = self.game.dict_to_write["RESULT_TYPE"]
+    
+    if (game_res == "W"):
+      self.curr_points += 3
+    elif (game_res == "D"):
+      self.curr_points += 1
+
+    self.curr_n_game += 1  # number of games played in this session
+    self.n_games_played += 1  # number of games played in current division
+
+    # now get the number of points required for relegation/promo/title
+    division_data = sgd.DIVISION_DATA[self.curr_div]
+    title_points = division_data["TITLE"]
+    promotion_points = division_data["PROMOTION"]
+    relegation_points = division_data["RELEGATION"]
+
+    if (self.curr_points >= title_points):
+      self.curr_points = 0  # reset points
+      self.n_games_played = 0
+      if (self.curr_div != 1):
+        self.curr_div -= 1  # move up the divisions
+
+      return  # no need to keep checking
+
+    if (self.n_games_played == 10):
+      # if all 10 games are played in a division that's not 1, check outcome
+
+      # promotion
+      try:  # will get type error in comparing int with None for div 1 promo
+        if (self.curr_points >= promotion_points):
+          self.n_games_played = 0
+          self.curr_points = 0
+          self.curr_div -= 1
+          return  # no need to keep checking
+
+      except TypeError:  # we're in div 1 so just reset points and games played
+        self.n_games_played = 0
+        self.curr_points = 0
+        return  # no need to keep checking
+
+      # relegation
+      try:  # will get type error in comparing int with None for div 10 releg
+        if (self.curr_points < relegation_points):
+          self.n_games_played = 0
+          self.curr_points = 0
+          self.curr_div += 1
+          return  # no need to keep checking
+
+      except TypeError:  # we're in div 10, so can't relegate
+        self.n_games_played = 0
+        self.curr_points = 0
+        return  # no need to keep checking
+
+      # Neither relegation nor promotion -> Keep division
+      self.n_games_played = 0
+      self.curr_points = 0
+
+    # Check for relegation before the 10th game is played
+
+    # NOTE: THERE IS NO TITLE CHECK BEFORE 10 GAMES BECAUSE ALL PROMO POINTS ARE
+    # WITHIN 3 POINTS OF TITLE, SO CAN BE DONE IN ONE GAME
+    games_remaining = 10 - self.n_games_played
+    try:
+      points_needed_to_stay_in_div = relegation_points - self.curr_points
+      if (points_needed_to_stay_in_div > games_remaining*3):
+        # more points needed to stay in div than can still be obtained -> relegate
+        self.curr_points = 0
+        self.curr_div += 1
+        self.n_games_played = 0
+        return  # no need to keep checking
+
+    except TypeError:  # subtracting from None: Can't get relegated from div 10
+      pass
+
+    # Check if promotion is out of range
+    try:
+      points_needed_to_promote = promotion_points - self.curr_points
+      if (points_needed_to_promote > games_remaining*3):
+        # more points needed to promote than can still be obtained -> keep div
+        self.curr_points = 0
+        self.n_games_played = 0
+        return  # no need to keep checking
+
+    except TypeError:  # subtracting from None: Can't get promoted from div 1
+      pass
+
+
+  #########################
+  ##### SHOW FUNCTION #####
+  #########################
+  def show(self):
+    """
+    Show the GUI window in the current state. Dependent on the state check
+    """
+    while (True):
+
+      self.curr_event, self.curr_values = self.window.read()
+      print(self.curr_event, type(self.curr_event), self.curr_values)
+      
+      if ((self.curr_event == sg.WIN_CLOSED) or (self.curr_event == "Exit")):
+        break
+      
+      # Now run different options dependent on the state
+      if (self.curr_state == "Start"):
+        failed = self.run_startup_options()
+
+      elif (self.curr_state == "Session"):
+        failed = self.run_session_creation_options()
+
+      elif (self.curr_state == "Pre-Game"):
+        failed = self.run_pre_game_options()
+
+      elif (self.curr_state == "PlayerChange"):
+        failed = self.run_player_change_options()
+
+      elif ((self.curr_state == "In-Game-unset") or
+            (self.curr_state == "In-Game-set")):
+        failed = self.run_in_game_options()
+
+      elif (self.curr_state == "Post-Game"):
+        failed = self.run_post_game_options()
+
+      else:  # some unaccounted for case
+        print("Exiting.")
+        break
+
+      if (failed):  # running through startup options failed
+        break
+
+    self.window.close()
