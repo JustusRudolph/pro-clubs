@@ -1,4 +1,4 @@
-from static_data import valid_ranges
+from ..static_data import valid_ranges
 
 def check_game_values(input_dict):
     """
