@@ -32,6 +32,35 @@ class Goal:
     else:
       self.og = None
 
+  
+  def __str__(self):
+    """
+    Writes the current goal into a string printable format
+    """
+    final_str = str(self.minute)
+    if (self.stoppage_time is not None):
+      final_str += "+" + str(self.stoppage_time) + "'"
+    else:
+      final_str += "'  "  # add two extra spaces to align
+
+    final_str += f"  {self.score[0]}-{self.score[1]}"
+
+    if (self.player_name is not None):
+      final_str += "  " + self.player_name
+
+    if (self.og == 1):  # it's an opponent's own goal
+      final_str += "  OG"
+
+    elif (isinstance(self.og, str)):  # og is string, so it's ours
+      final_str += "  " + self.og + " (OG)"
+
+    elif (self.is_pen):  # can't have penalty and own goal together
+      final_str += " (P)"
+
+    return final_str
+
+
+
   def add_assist(self, assist_ID):
     self.assist_ID = assist_ID
 

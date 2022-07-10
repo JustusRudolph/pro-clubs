@@ -1,7 +1,13 @@
+import platform
 import PySimpleGUI as sg
 
 from structs import game
 from static_data import static_game_data as sgd
+
+CURRENT_PLATFORM = platform.platform()
+
+if (CURRENT_PLATFORM == "Windows"):  # vision currently only works on windows
+  from vision import vision
 
 class GUI:
   
@@ -30,7 +36,8 @@ class GUI:
                    "PlayerChange",
                    "In-Game-unset",
                    "In-Game-set",
-                   "Post-Game"]
+                   "Post-Game",
+                   "Screenshot-check"]
     self.curr_state = self.states[0]
     self.curr_event = ""  # these change each loop
     self.curr_values = {}
@@ -39,6 +46,10 @@ class GUI:
     self.game_set = False  # for any and home
     self.add_goal_for = False
     self.add_goal_against = False
+
+    # screenshot to pass to reading. First entry is match, second is dict of
+    # with player names as keys and corresponding list of screenshots as values
+    self.all_screenshots = [0, {}]
 
 
   ############################
@@ -125,7 +136,10 @@ class GUI:
                +"Add data below.")],
     ]
     if (self.game_set): # have created an any, show goal screen
-      layout.append([sg.Text("ADD CURRENT SCORE/GAME DATA HERE MAYBE?")])
+      layout.append([sg.Text("Current score: " + str(self.game.score[0]) + "-"
+                            + str(self.game.score[1]))])
+      for goal in self.game.goal_list:
+        layout.append([sg.Text(str(goal))])
 
       # Only be able to add another goal if we are not currently adding one
       if not(self.add_goal_against or self.add_goal_for):
@@ -142,22 +156,30 @@ class GUI:
                      sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
       layout.append([sg.Text("Scorer: "), sg.Combo(self.players + ["AI"], key="scorer")])
       layout.append([sg.Text("Assist: "), sg.Combo(self.players + ["AI"], key="assist")])
-      layout.append([sg.Checkbox("Penalty: ", default=False, key="pen")])
-      layout.append([sg.Checkbox("Own Goal: ", default=False, key="og")])
+      layout.append([sg.Checkbox("Penalty", default=False, key="pen")])
+      layout.append([sg.Checkbox("Own Goal", default=False, key="og")])
       layout.append([sg.Button("Done")])
 
     elif (self.add_goal_against):
       layout.append([sg.Text("Minute: "), sg.Input(key="minute"),
                      sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
-      layout.append([sg.Checkbox("Penalty: ", default=False, key="pen")])
+      layout.append([sg.Checkbox("Penalty", default=False, key="pen")])
       layout.append([sg.Text("Own Goal"), sg.Combo(self.players + ["AI"], key="og")])
       layout.append([sg.Button("Done")])
 
     return layout
 
   def create_post_game_layout(self):
+    line = "Game Completed - "
+    if (self.game.dict_to_write["RESULT_TYPE"] == "W"):
+      line += "Won"
+    elif (self.game.dict_to_write["RESULT_TYPE"] == "D"):
+      line += "Drew"
+    elif (self.game.dict_to_write["RESULT_TYPE"] == "L"):
+      line += "Lost"
+    line += " game " + str(self.game.score[0]) + "-" + str(self.game.score[1])
     layout = [
-      [sg.Text("Game Completed - WONLOSTHERE")],
+      [sg.Text(line)],
       [sg.Button("Add match facts")],
       [sg.Text("Add match data for: ")] +
       [sg.Button(name) for name in self.players],
@@ -351,20 +373,35 @@ class GUI:
 
   def run_post_game_options(self):
     if (self.curr_event == "Add match facts"):
-      #TODO TAKE SCREENSHOT HERE AND PASS TO GAME
-      pass
+      # player false means match is screenshotted
+      sc = vision.screenshot_fifa(player=False)
+      self.all_screenshots[0] = sc
       return 0
     
     elif (self.curr_event in self.players):
       # this means the event is a player name, i.e. add player data
-      # TODO TAKE SCREENSHOT FOR PLAYERS HERE AND PASS TO GAME
-      dummy_player_data = {self.curr_event: {}}
-      self.game.add_player_data(dummy_player_data)
-      
+      scs = vision.screenshot_fifa()  # player is true by default
+      # create new entry in dictionary for player name -> screenshots
+      self.all_screenshots[1][self.curr_event] = scs
       return 0
 
     elif (self.curr_event == "Done"):  # end match
-      self.game.write_all_data()
+      if (CURRENT_PLATFORM == "Windows"):
+        # vision currently only works on windows
+        full_game_data = vision.process_screenshots(self.all_screenshots)
+        match_data = full_game_data[0]
+        full_player_data = full_game_data[1]
+        
+        self.game.add_match_data(match_data)
+        self.game.add_player_data(full_player_data)
+
+      self.game.write_all_data()  # in all cases, write relevant data for the game
+
+      if (CURRENT_PLATFORM == "Windows"):
+        # reset the screenshots for next game
+        self.all_screenshots = []
+        self.screenshot_name_order = []
+
       self.curr_state = "Pre-Game"
       new_layout = self.create_pre_game_layout()  # go back to pregame
       self.layout = new_layout

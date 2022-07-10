@@ -1,7 +1,7 @@
 import json
 import os
-
-from numpy import full
+import numpy as np
+import platform
 
 from . import goal as goal_class
 from . import assist as assist_class
@@ -13,6 +13,10 @@ path_to_pro_clubs_root = curr_dir[:pro_clubs_index]
 # set global variable for path to game_data file
 FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
                     + "pro-clubs/src/data/game_data.json")
+
+if (platform.platform() == "Windows"):
+  FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
+                      + "pro-clubs\src\data\game_data.json")
 
 def read_json(path):
   """
@@ -67,6 +71,9 @@ class Game:
     self.curr_goal_ID = 0
     self.curr_assist_ID = 0
 
+    # list of all goals, good for printing goal info
+    self.goal_list = []
+
     self.dict_to_write = {}  # to write in json at the end
 
     # get the most recent ID
@@ -108,6 +115,7 @@ class Game:
 
     goal = goal_class.Goal(minute, tuple(self.score), stoppage_time=stoppage_time,
                            is_pen=pen, og=og)
+    self.goal_list.append(goal)
     # get the goal in neat dict form to write to json
     goal_dict = goal.get_dict_struct()
     self.dict_to_write["GOALS_AGAINST"].append(goal_dict)
@@ -146,6 +154,7 @@ class Game:
 
       self.curr_assist_ID += 1  # move to next unique ID
 
+    self.goal_list.append(goal)
     goal_dict = goal.get_dict_struct()
     self.dict_to_write["GOALS_FOR"].append(goal_dict)
 
@@ -177,7 +186,7 @@ class Game:
     self.dict_to_write["RESULT_TYPE"] = res_type
 
   
-  def add_player_data(self, player_data):
+  def add_player_data(self, all_player_data):
     """
     Take data that has been read by the computer from the final
     stats screen, and pass it as a dictionary for each player name.
@@ -186,24 +195,36 @@ class Game:
     a different player, or be called once with all the data right away.
 
     Parameters:
-      player_data(dict): Keys are player names, values are dicts of
-                         data for several fields such as "shots".
+      all_player_data(list): List of dicts of fields such as "Goals" as keys
+                             to values (e.g. 2)
     """
+    for player_data in all_player_data:
+        # the name of the player is a field in player_data
+        self.dict_to_write["PLAYER_DATA"].append(player_data)
+
+
+  
+  def add_match_data(self, match_data):
+    """
+    Take data that has been read from the final match stats screen.
+
+    Parameters:
+      match_data(dict): Keys are the fields (such as "Goals") and the
+                        values are length 2 lists, so the values for
+                        home and away for the given attribute
+    """
+    fields = list(match_data.keys())
+    values = np.array(list(match_data.values()))  # for slicing
     
-    for player_name in self.player_names:
-      try:  # check if we have data for that player
-        all_data = player_data[player_name]
-        # The following is required since the structure isn't defined
-        # yet for reading using vision. TODO This is very beta
-        if ("NAME" not in all_data.keys()):
-          all_data["NAME"] = player_name
+    home_values = values[:, 0]
+    away_values = values[:, 1]
 
-        # append data for this player
-        # TODO add checker that we don't add data twice
-        self.dict_to_write["PLAYER_DATA"].append(all_data)
+    home_dict = dict(zip(fields, home_values))
+    away_dict = dict(zip(fields, away_values))
 
-      except KeyError:  # if we don't have that player's data now
-        pass  # don't do anything
+    self.dict_to_write["HOME_MATCH_DATA"] = home_dict
+    self.dict_to_write["AWAY_MATCH_DATA"] = away_dict
+
 
   
   def write_all_data(self):
