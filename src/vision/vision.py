@@ -5,7 +5,7 @@ from util import take_screenshot, focus_to_window
 from pynput.keyboard import Controller
 
 
-def screenshot_fifa(wait_time=1, player=True, name=""):
+def screenshot_fifa(wait_time=1, player=True):
     """
     Takes one or more screenshots in FIFA 22, depending on the player variable.
     It first opens FIFA, then waits the given wait time in seconds and returns the taken screenshots.
@@ -27,7 +27,6 @@ def screenshot_fifa(wait_time=1, player=True, name=""):
     if not player:
         return take_screenshot(0)
 
-    dict = {"NAME": name}
     screenshots = []
 
     for i in range(5):
@@ -36,12 +35,10 @@ def screenshot_fifa(wait_time=1, player=True, name=""):
         time.sleep(0.1)
         keyboard.release('c')
 
-    dict["SCREENSHOTS"] = screenshots
-
-    return dict
+    return screenshots
     
 
-def process_screenshots(data, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
+def process_screenshots(screenshots, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
     """
     Takes a list of screenshots and reads the relevant data from them.
     The first screenshot must be from the match facts screen. Then the player screens follow,
@@ -58,25 +55,25 @@ def process_screenshots(data, path='C:\\Program Files\\Tesseract-OCR\\tesseract'
     if(platform.system() == "Windows"):
         processing.set_tesseract_path(path)
 
-    game_dict = processing.get_game_data(data[0])
+    game_dict = processing.get_game_data(screenshots[0])
 
     player_dicts = []
 
-    for i in range(len(data)-1):
-        player_dicts.append(processing.get_player_data(data[i+1]["SCREENSHOTS"], data[i+1]["NAME"]))
+    for key in screenshots[1]:
+        player_dicts.append(processing.get_player_data(screenshots[1][key], key))
 
     return [game_dict, player_dicts]
 
 
 # main function for testing
-# if __name__ == "__main__":
-#     # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
-#     screenshots = []
-#     screenshots.append(screenshot_fifa(player=False))
-#     input("taken first")
-#     screenshots.append(screenshot_fifa(name="Timbo"))
-#     input("taken second")
-#     screenshots.append(screenshot_fifa(name="Jutte"))
-#     start = time.time()
-#     print(process_screenshots(screenshots))
-#     print("time: " + str(time.time() - start))
+if __name__ == "__main__":
+    # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
+    screenshots = [0, {}]
+    screenshots[0] = screenshot_fifa(player=False)
+    input("taken first")
+    screenshots[1]["Timbo"] =  (screenshot_fifa())
+    input("taken second")
+    screenshots[1]["Jutte"] =  (screenshot_fifa())
+    start = time.time()
+    print(process_screenshots(screenshots))
+    print("time: " + str(time.time() - start))
