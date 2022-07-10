@@ -4,7 +4,10 @@
     "DIVISION": 4,
     "DIV_GAME_NO": 5,
     "POINTS_BEFORE": 12,
-    "RESULT": [1,1],
+    "RESULT": [
+      1,
+      1
+    ],
     "RESULT_TYPE": "D",
     "ANY": "Jutte",
     "HOME": 0,
@@ -12,12 +15,15 @@
       {
         "ID": 0,
         "MINUTE": 15,
+        "STOPPAGE": 0,
         "PLAYER_NAME": "Timbo",
         "PENALTY": 0,
         "ASSIST_ID": 0,
-        "SCORE": [0,1]
-      },
-      {}
+        "SCORE": [
+          0,
+          1
+        ]
+      }
     ],
     "ASSISTS": [
       {
@@ -30,12 +36,18 @@
       {
         "MINUTE": 23,
         "PENALTY": 0,
-        "SCORE": [1,1]
+        "SCORE": [
+          1,
+          1
+        ]
       }
     ],
     "GAME_DATA": [
       {
-        "POSSESSION":[50,50]
+        "POSSESSION": [
+          50,
+          50
+        ]
       }
     ],
     "PLAYER_DATA": [
@@ -49,5 +61,40 @@
         "NAME": "David"
       }
     ]
+  },
+  {
+    "GAME_ID": 1,
+    "DIVISION": 2,
+    "DIV_GAME_NO": 1,
+    "POINTS_BEFORE": 3,
+    "RESULT": [
+      1,
+      0
+    ],
+    "RESULT_TYPE": "W",
+    "ANY": "Jutte",
+    "HOME": 1,
+    "GOALS_FOR": [
+      {
+        "MINUTE": 10,
+        "SCORE": [
+          1,
+          0
+        ],
+        "PENALTY": 0,
+        "ID": 0,
+        "PLAYER_NAME": "DJ",
+        "ASSIST_ID": 0
+      }
+    ],
+    "ASSISTS": [
+      {
+        "ID": 0,
+        "GOAL_ID": 0,
+        "PLAYER_NAME": "Jutte"
+      }
+    ],
+    "GOALS_AGAINST": [],
+    "PLAYER_DATA": []
   }
 ]
