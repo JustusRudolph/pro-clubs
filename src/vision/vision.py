@@ -13,9 +13,11 @@ def screenshot_fifa(wait_time=1, player=True):
     Parameters:
         wait_time(float): wait time after application was opened and first screenshot is taken
         player(bool): defines if the screenshot is taken in the match or player screen
+        name(string): name of the player, only relevant when taken in player screen
 
     Returns:
-        screenshots: single screenshot when match screen, multiple screenshots as list when player screen
+        screenshots: single screenshot when match screen,
+                     dictionary with name and screenshots when player screen
     """
     keyboard = Controller()
 
@@ -36,7 +38,7 @@ def screenshot_fifa(wait_time=1, player=True):
     return screenshots
     
 
-def process_screenshots(screenshots, names, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
+def process_screenshots(screenshots, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
     """
     Takes a list of screenshots and reads the relevant data from them.
     The first screenshot must be from the match facts screen. Then the player screens follow,
@@ -57,21 +59,21 @@ def process_screenshots(screenshots, names, path='C:\\Program Files\\Tesseract-O
 
     player_dicts = []
 
-    for i in range(len(names)):
-        player_dicts.append(processing.get_player_data(screenshots[i+1], names[i]))
+    for key in screenshots[1]:
+        player_dicts.append(processing.get_player_data(screenshots[1][key], key))
 
     return [game_dict, player_dicts]
 
 
 # main function for testing
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
-    # screenshots = []
-    # screenshots.append(screenshot_fifa(player=False))
-    # input("taken first")
-    # screenshots.append(screenshot_fifa())
-    # input("taken second")
-    # screenshots.append(screenshot_fifa())
-    # start = time.time()
-    # print(process_screenshots(screenshots, ["jutte", "timbo"]))
-    # print("time: " + str(time.time() - start))
+    screenshots = [0, {}]
+    screenshots[0] = screenshot_fifa(player=False)
+    input("taken first")
+    screenshots[1]["Timbo"] =  (screenshot_fifa())
+    input("taken second")
+    screenshots[1]["Jutte"] =  (screenshot_fifa())
+    start = time.time()
+    print(process_screenshots(screenshots))
+    print("time: " + str(time.time() - start))
