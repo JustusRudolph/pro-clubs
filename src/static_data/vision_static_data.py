@@ -1,8 +1,15 @@
 MAX_VALUE = 1000000
 
+SUMMARY_SCREEN = 0
+POSSESSION_SCREEN = 1
+SHOOTING_SCREEN = 2
+PASSING_SCREEN = 3
+DEFENDING_SCREEN = 4
+
+
 # list with all attributes from the match facts screen
 game_data_attr = ["Possession", "Shots", "ExpectedGoals", "Passes",
-    "Tackles", "TacklesWon", "Interceptions", "Saves", "Saves", "FoulsCommitted", "Offsides",
+    "Tackles", "TacklesWon", "Interceptions", "Saves", "FoulsCommitted", "Offsides",
     "Corners", "FreeKicks", "PenaltyKicks", "YellowCards", "RedCards", "DribbleSuccessRate",
     "ShotAccuracy", "PassAccuracy"]
 
@@ -16,6 +23,63 @@ player_data_attr = ["Rating", "Goals", "Assists", "Shots", "ShotAccuracy", "Pass
     "SetPiecesShots", "ExpectedAssits", "PassesCompleted", "PassesIntercepted", "OffsidePasses", "GroundPasses", "LobPasses",
     "ThroughPasses", "LoftedThroughPasses", "Crosses", "PassesSetPieces", "AirDuelsWon", "BeatenByOpponent"]
 
+# index of screenshot for every player attribute
+player_data_screenshot_indices = {
+    "Rating": SUMMARY_SCREEN,
+    "Goals": SUMMARY_SCREEN,
+    "Assists": SUMMARY_SCREEN,
+    "Shots": SUMMARY_SCREEN,
+    "ShotAccuracy": SUMMARY_SCREEN,
+    "Passes": SUMMARY_SCREEN,
+    "PassAccuracy": SUMMARY_SCREEN,
+    "Dribbles": SUMMARY_SCREEN,
+    "DribbleSuccessRate": SUMMARY_SCREEN,
+    "Tackles": SUMMARY_SCREEN,
+    "TackleSuccessRate": SUMMARY_SCREEN,
+    "Offsides": SUMMARY_SCREEN,
+    "FoulsCommitted": SUMMARY_SCREEN,
+    "PossessionWon": SUMMARY_SCREEN,
+    "PossessionLost": SUMMARY_SCREEN,
+    "MinutesPlayed": SUMMARY_SCREEN,
+    "DistanceCovered": SUMMARY_SCREEN,
+    "DistanceSprinted": SUMMARY_SCREEN,
+    "YellowCard": SUMMARY_SCREEN,
+    "RedCard": SUMMARY_SCREEN,
+    "Possession": POSSESSION_SCREEN,
+    "DribblesCompleted": POSSESSION_SCREEN,
+    "DistanceDribbled": POSSESSION_SCREEN,
+    "FoulsWon": POSSESSION_SCREEN,
+    "PenaltiesWon": POSSESSION_SCREEN,
+    "RegularDribble": POSSESSION_SCREEN,
+    "ShieldDribble": POSSESSION_SCREEN,
+    "StrafeDribble": POSSESSION_SCREEN,
+    "Beat": POSSESSION_SCREEN,
+    "SkillmoveBeat": POSSESSION_SCREEN,
+    "Nutmeg": POSSESSION_SCREEN,
+    "KnockOns": POSSESSION_SCREEN,
+    "ShotsOnTarget": SHOOTING_SCREEN,
+    "ShotsOffTarget": SHOOTING_SCREEN,
+    "ShotsBlocked": SHOOTING_SCREEN,
+    "NormalShots": SHOOTING_SCREEN,
+    "FinesseShots": SHOOTING_SCREEN,
+    "HeaderShots": SHOOTING_SCREEN,
+    "LowShots": SHOOTING_SCREEN,
+    "VolleyShots": SHOOTING_SCREEN,
+    "ChipShots": SHOOTING_SCREEN,
+    "SetPiecesShots": SHOOTING_SCREEN,
+    "ExpectedAssits": PASSING_SCREEN,
+    "PassesCompleted": PASSING_SCREEN,
+    "PassesIntercepted": PASSING_SCREEN, # passes that have been played by yourself but have been intercepted
+    "OffsidePasses": PASSING_SCREEN,
+    "GroundPasses": PASSING_SCREEN,
+    "LobPasses": PASSING_SCREEN,
+    "ThroughPasses": PASSING_SCREEN,
+    "LoftedThroughPasses": PASSING_SCREEN,
+    "Crosses": PASSING_SCREEN,
+    "PassesSetPieces": PASSING_SCREEN,
+    "AirDuelsWon": DEFENDING_SCREEN,
+    "BeatenByOpponent": DEFENDING_SCREEN
+}
 
 # dictionary that defines the expected range for game data
 game_exp_range_dict = {
@@ -66,9 +130,9 @@ player_exp_range_dict = {
     "DistanceDribbled": [0, 10],
     "FoulsWon": [0, 10],
     "PenaltiesWon": [0, 3],
-    "RegularDribble": [0, 10],
-    "ShieldDribble": [0, 10],
-    "StrafeDribble": [0, 10],
+    "RegularDribble": [0, 100],
+    "ShieldDribble": [0, 100],
+    "StrafeDribble": [0, 100],
     "Beat": [0, 20],
     "SkillmoveBeat": [0, 10],
     "Nutmeg": [0, 3],
@@ -146,9 +210,9 @@ player_valid_range_dict = {
     "DistanceDribbled": [0, MAX_VALUE],
     "FoulsWon": [0, MAX_VALUE],
     "PenaltiesWon": [0, MAX_VALUE],
-    "RegularDribble": [0, MAX_VALUE],
-    "ShieldDribble": [0, MAX_VALUE],
-    "StrafeDribble": [0, MAX_VALUE],
+    "RegularDribble": [0, 100],
+    "ShieldDribble": [0, 100],
+    "StrafeDribble": [0, 100],
     "Beat": [0, MAX_VALUE],
     "SkillmoveBeat": [0, MAX_VALUE],
     "Nutmeg": [0, MAX_VALUE],
