@@ -3,7 +3,7 @@ import numpy as np
 import pytesseract
 
 import cropping, util
-import value_checking as vc
+import dict_creater as dc
 
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
@@ -11,7 +11,7 @@ float_config = r'-c tessedit_char_whitelist=0123456789. --psm 10'
 
 # define indices where float is needed
 game_float_indices = [2, 20]
-player_float_indices = [0, 16, 17]
+player_float_indices = [0, 16, 17, 21, 41]
 
 
 def set_tesseract_path(path):
@@ -39,17 +39,14 @@ def get_game_data(screenshot):
 
     for i in range(len(images)):
         if i in game_float_indices:
-            data.append(get_number_from_image(np.array(images[i]), config=float_config))
+            data.append(float(get_number_from_image(np.array(images[i]), config=float_config)))
         else:
-            data.append(get_number_from_image(np.array(images[i])))
+            data.append(int(get_number_from_image(np.array(images[i]))))
 
-    game_dict = get_game_dict(data)
-    vc.check_game_values(game_dict)
-
-    return game_dict
+    return dc.get_game_dict(data)
 
 
-def get_player_data(screenshot, name=""):
+def get_player_data(screenshots, name=""):
     """
     Takes a screenshot taken in the player performance screen, then crops the data from the screenshot
     and reads the data with pytesseract. The data is stored in a dictionary on which a
@@ -63,18 +60,18 @@ def get_player_data(screenshot, name=""):
     Returns:
         player_dict(dict): dictionary that contains all relevant data from the player performance screen
     """
-    images = cropping.crop_player_data(screenshot)
+    images = cropping.crop_player_data(screenshots)
     data = []
 
-    for i in range(len(images)-1):
-        if i in player_float_indices:
-            data.append(get_number_from_image(np.array(images[i]), config=float_config))
+    for i in range(len(images)):
+        if i==18: # index of image with card area
+            data.extend(get_card_data(images[i]))
+        elif i in player_float_indices:
+            data.append(float(get_number_from_image(np.array(images[i]), config=float_config)))
         else:
-            data.append(get_number_from_image(np.array(images[i])))
+            data.append(int(get_number_from_image(np.array(images[i]))))
 
-    data.extend(get_card_data(images[18]))
-
-    return get_player_dict(data, name)
+    return dc.get_player_dict(data, name)
 
 
 def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):
@@ -131,81 +128,6 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
                 return last_read
 
     return "-1"
-
-
-def get_game_dict(data):
-    """
-    Stores the data from a game given as a list in a dictionary.
-
-    Parameters: 
-        data(list): data to pass into dictionary
-
-    Returns:
-        game_dict(dict): dictionary with the data
-    """
-    half_length = int(len(data)/2)
-
-    game_dict = {
-        "Possession": [int(data[0]), int(data[0+half_length])],
-        "Shots": [int(data[1]), int(data[1+half_length])],
-        "ExpectedGoals": [float(data[2]), float(data[2+half_length])],
-        "Passes": [int(data[3]), int(data[3+half_length])],
-        "Tackles": [int(data[4]), int(data[4+half_length])],
-        "TacklesWon": [int(data[5]), int(data[5+half_length])],
-        "Interceptions": [int(data[6]), int(data[6+half_length])],
-        "Saves": [int(data[7]), int(data[7+half_length])],
-        "FoulsCommitted": [int(data[8]), int(data[8+half_length])],
-        "Offsides": [int(data[9]), int(data[9+half_length])],
-        "Corners": [int(data[10]), int(data[10+half_length])],
-        "FreeKicks": [int(data[11]), int(data[11+half_length])],
-        "PenaltyKicks": [int(data[12]), int(data[12+half_length])],
-        "YellowCards": [int(data[13]), int(data[13+half_length])],
-        "RedCards": [int(data[14]), int(data[14+half_length])],
-        "DribbleSuccessRate": [int(data[15]), int(data[15+half_length])],
-        "ShotAccuracy": [int(data[16]), int(data[16+half_length])],
-        "PassAccuracy": [int(data[17]), int(data[17+half_length])]
-    }
-
-    return game_dict
-
-
-def get_player_dict(data, name):
-    """
-    Stores the data from a player given as a list in a dictionary.
-
-    Parameters:
-        data(list): data to pass into dictionary
-        name(string): name of the player
-
-    Returns:
-        player_dict(dict): dictionary with the data
-    """
-
-    player_dict = {
-        "Name": name,
-        "Rating": float(data[0]),
-        "Goals": int(data[1]),
-        "Assists": int(data[2]),
-        "Shots": int(data[3]),
-        "ShotAccuracy": int(data[4]),
-        "Passes": int(data[5]),
-        "PassAccuracy": int(data[6]),
-        "Dribbles": int(data[7]),
-        "DribbleSuccessRate": int(data[8]),
-        "Tackles": int(data[9]),
-        "TackleSuccessRate": int(data[10]),
-        "Offsides": int(data[11]),
-        "FoulsCommitted": int(data[12]),
-        "PossessionWon": int(data[13]),
-        "PossessionLost": int(data[14]),
-        "MinutesPlayed": int(data[15]),
-        "DistanceCovered": float(data[16]),
-        "DistanceSprinted": float(data[17]),
-        "YellowCard": int(data[18]),
-        "RedCard": int(data[19])
-    }
-
-    return player_dict
 
 
 def get_card_data(img):

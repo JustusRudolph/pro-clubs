@@ -16,7 +16,7 @@ def crop_game_data(screenshot):
     return images
 
 
-def crop_player_data(screenshot):
+def crop_player_data(screenshots):
     """
     Crops the player data from a screenshot taken in the player performance screen.
     Assumes the screenshot was taken in full screen and in the format 16:9.
@@ -27,9 +27,13 @@ def crop_player_data(screenshot):
     Returns:
         images(list): cropped images of the player data
     """
-    images = [crop_rating(screenshot)]
-    images.extend(crop_player_stats(screenshot))
-    images.append(crop_card(screenshot))
+    images = [crop_rating(screenshots[0])]
+    images.extend(crop_player_summary(screenshots[0]))
+    images.append(crop_card(screenshots[0]))
+    images.extend(crop_player_specifics(screenshots[1], [1, 3, 10, 11]))
+    images.extend(crop_player_specifics(screenshots[2], [0, 1, 2, 6, 7, 8]))
+    images.extend(crop_player_specifics(screenshots[3], [0, 2, 5, 7, 8, 15]))
+    images.extend(crop_player_specifics(screenshots[4], [9, 10], reverse_skip=True))
 
     return images
 
@@ -56,7 +60,7 @@ def crop_rating(img):
     return img_rating
 
 
-def crop_player_stats(img):
+def crop_player_summary(img):
     """
     Crops the stats from the player performance screen. For every single stat an image is created.
 
@@ -80,6 +84,30 @@ def crop_player_stats(img):
     images_stats = []
     for i in range(17):
         images_stats.append(crop_single_stat(img_stats, i + 1, 17))
+
+    return images_stats
+
+
+def crop_player_specifics(img, indices_to_skip, reverse_skip=False):
+    width, height = img.size
+
+    left = width / 1.09
+    top = height / 3.3
+    right = width / 1.04
+    bottom = height / 1.14
+
+    # first crop all stats in a single image
+    img_stats = img.crop((left, top, right, bottom))
+
+    images_stats = []
+    for i in range(16):
+        if reverse_skip:
+            if i not in indices_to_skip:
+                continue
+        else:
+            if i in indices_to_skip:
+                continue
+        images_stats.append(crop_single_stat(img_stats, i + 1, 16))
 
     return images_stats
 
