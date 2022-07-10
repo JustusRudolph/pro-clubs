@@ -2,8 +2,8 @@ import cv2 as cv
 import numpy as np
 import pytesseract
 
-import cropping, util
-import dict_creater as dc
+from vision import cropping, util
+from vision import dict_creater as dc
 
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'

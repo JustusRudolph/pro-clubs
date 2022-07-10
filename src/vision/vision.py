@@ -1,8 +1,7 @@
-import platform
-import time
-import processing
-from util import take_screenshot, focus_to_window
+import platform, time
 from pynput.keyboard import Controller
+
+from vision import processing, util
 
 
 def screenshot_fifa(wait_time=1, player=True):
@@ -21,16 +20,16 @@ def screenshot_fifa(wait_time=1, player=True):
     """
     keyboard = Controller()
 
-    focus_to_window('FIFA 22')
+    util.focus_to_window('FIFA 22')
     time.sleep(wait_time)
 
     if not player:
-        return take_screenshot(0)
+        return util.take_screenshot(0)
 
     screenshots = []
 
     for i in range(5):
-        screenshots.append(take_screenshot(0.5))
+        screenshots.append(util.take_screenshot(0.5))
         keyboard.press('c')
         time.sleep(0.1)
         keyboard.release('c')

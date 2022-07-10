@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 from structs import game
 from static_data import static_game_data as sgd
 
-CURRENT_PLATFORM = platform.platform()
+CURRENT_PLATFORM = platform.system()
 
 if (CURRENT_PLATFORM == "Windows"):  # vision currently only works on windows
   from vision import vision
@@ -400,7 +400,6 @@ class GUI:
       if (CURRENT_PLATFORM == "Windows"):
         # reset the screenshots for next game
         self.all_screenshots = []
-        self.screenshot_name_order = []
 
       self.curr_state = "Pre-Game"
       new_layout = self.create_pre_game_layout()  # go back to pregame
