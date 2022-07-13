@@ -229,12 +229,15 @@ class GUI:
         sg.Text(f"The value for {attribute} could not be read. "
                 +"Please enter it manually:"),
         sg.Input(key="attribute_value")
-      ],
-      [sg.Button("Done")]
+      ]
     ]
+    if (self.misread_idx == (len(self.misreads) - 1)):  # last screenshot
+      layout.append([sg.Button("Done")])
+    else:  # there are still other screenshots, direct to next
+      layout.append([sg.Button("Next")])
 
     if (self.misread_idx != 0):  # in case we want to edit the previous ss
-      layout[-1].append(sg.Button("Previous Screenshot"))
+      layout[-1].append(sg.Button("Previous"))
     
     return layout
 
@@ -481,7 +484,7 @@ class GUI:
     that it is necessary that we move to the next screenshot at the end to not
     get stuck in a loop.
     """
-    if (self.curr_event == "Done"):
+    if ((self.curr_event == "Done") or (self.curr_event == "Next")):
       attr_value = self.curr_event["attribute_value"]
       # first is either a player name or home/away int 0/1
       player_home_away, attr = self.misreads[self.misread_idx]
@@ -496,7 +499,7 @@ class GUI:
 
       self.misread_idx += 1
 
-    elif (self.curr_event == "Previous Screenshot"):
+    elif (self.curr_event == "Previous"):
       self.misread_idx -= 1
 
     if (self.misread_idx == len(self.misreads)):  # arrived at the end
