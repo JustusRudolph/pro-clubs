@@ -11,12 +11,16 @@ curr_dir = os.getcwd()
 pro_clubs_index = curr_dir.find("pro-clubs")
 path_to_pro_clubs_root = curr_dir[:pro_clubs_index]
 # set global variable for path to game_data file
-FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
-                    + "pro-clubs/src/data/game_data.json")
+DATA_PATH = (path_to_pro_clubs_root + "pro-clubs/src/data/")
+FULL_GAME_DATA_PATH = DATA_PATH + "game_data.json"
+FULL_PLAYER_DATA_PATH = DATA_PATH + "player_data/"
 
-if (platform.system() == "Windows"):
-  FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
-                      + "pro-clubs\src\data\game_data.json")
+PLATFORM = platform.system()
+
+if (PLATFORM == "Windows"):
+  DATA_PATH = (path_to_pro_clubs_root + "pro-clubs\\src\\data\\")
+  FULL_PLAYER_DATA_PATH = DATA_PATH + "player_data\\"
+
 
 def read_json(path):
   """
@@ -237,3 +241,9 @@ class Game:
     curr_data.append(self.dict_to_write)  # append this game's data
 
     write_json(curr_data, FULL_GAME_DATA_PATH)  # write back to original file
+
+    # add the game ID to the player data of the players who were present
+    for player in self.player_names:
+      player_path = FULL_PLAYER_DATA_PATH + player + ".json"
+      player_match_data = read_json(player_path)
+      player_match_data["GAME_ID"].append(self.dict_to_write["ID"])
