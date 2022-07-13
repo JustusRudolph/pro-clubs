@@ -372,5 +372,41 @@
       "ShotAccuracy": 0.0,
       "PassAccuracy": 85.0
     }
+  },
+  {
+    "GAME_ID": 3,
+    "DIVISION": 2,
+    "DIV_GAME_NO": 1,
+    "POINTS_BEFORE": 3,
+    "RESULT": [
+      1,
+      0
+    ],
+    "RESULT_TYPE": "W",
+    "ANY": "Jutte",
+    "HOME": 1,
+    "GOALS_FOR": [
+      {
+        "MINUTE": 13,
+        "SCORE": [
+          1,
+          0
+        ],
+        "PENALTY": 1,
+        "OG": 0,
+        "ID": 0,
+        "PLAYER_NAME": "Timbo",
+        "ASSIST_ID": 0
+      }
+    ],
+    "ASSISTS": [
+      {
+        "ID": 0,
+        "GOAL_ID": 0,
+        "PLAYER_NAME": "AI"
+      }
+    ],
+    "GOALS_AGAINST": [],
+    "PLAYER_DATA": []
   }
 ]
