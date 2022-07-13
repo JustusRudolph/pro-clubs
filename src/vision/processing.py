@@ -1,9 +1,9 @@
+from PIL import ImageOps
 import cv2 as cv
 import numpy as np
 import pytesseract
 
-import cropping, util
-import dict_creater as dc
+from . import cropping, util, dict_creater as dc
 
 # define configs for pytesseract
 int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
@@ -38,12 +38,15 @@ def get_game_data(screenshot):
     data = []
 
     for i in range(len(images)):
+        img = ImageOps.invert(images[i])
         if i in game_float_indices:
-            data.append(float(get_number_from_image(np.array(images[i]), config=float_config)))
+            data.append(float(get_number_from_image(np.array(img), config=float_config)))
         else:
-            data.append(int(get_number_from_image(np.array(images[i]))))
+            data.append(int(get_number_from_image(np.array(img))))
 
-    return dc.get_game_dict(data)
+    game_dict, misreads = dc.get_game_dict(data)
+
+    return game_dict, misreads
 
 
 def get_player_data(screenshots, name=""):
@@ -65,16 +68,21 @@ def get_player_data(screenshots, name=""):
 
     for i in range(len(images)):
         if i==18: # index of image with card area
-            data.extend(get_card_data(images[i]))
+            data.extend(get_card_data(images[i])) # already returned as ints in a list
         elif i in player_float_indices:
-            data.append(float(get_number_from_image(np.array(images[i]), config=float_config)))
+            img = ImageOps.invert(images[i])
+            data.append(float(get_number_from_image(np.array(img), config=float_config)))
         else:
-            data.append(int(get_number_from_image(np.array(images[i]))))
+            img = ImageOps.invert(images[i])
+            data.append(int(get_number_from_image(np.array(img))))
 
-    return dc.get_player_dict(data, name)
+    game_dict, misreads = dc.get_player_dict(data, name)
+
+    return game_dict, misreads
 
 
-def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=3, config=int_config):
+def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=1,
+                            config=int_config, filters=True):
     """
     Reads an image that should only contain a single line of numbers and returns the result as a string.
     The image will be resized if the result is unclear. For every resize a max number of reads are performed.
@@ -86,15 +94,31 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
         max_resize_factor(int): max resizes
         equal_reads_to_accept(int): number of equals reads the accept the result
         config(string): custom config for tesseract
+        filters(bool): if extra filters should be applied to the image
     
     Returns:
         numbers(string): numbers from image
     """
     height, width, channels = img.shape
 
-    # uncomment to apply grayscale and thresholding filter - might improve performance
-    # image = util.get_grayscale(image)
-    # image = util.thresholding(image)
+    if filters: # TODO: specify filters
+        img = util.get_grayscale(img)
+        img = util.thresholding(img)
+
+    number = pytesseract.pytesseract.image_to_string(img, config=config, lang='digits') # TODO: different path for digits data
+    number = number.split()
+
+    if len(number) == 0 or float(number[0]) > 250: # TODO: implement such that it checks for expected range
+        print("could not read")
+        image_resized = cv.resize(img, (width * 2, height * 2))
+
+        number = pytesseract.pytesseract.image_to_string(image_resized, config=config, lang='eng')
+        number = number.split()
+
+        if len(number) == 0:
+            return "-1"
+
+    return number[0]
 
     for size_factor in range(max_resize_factor):
         start_size = 1
@@ -127,7 +151,12 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
             if equal_reads >= equal_reads_to_accept:
                 return last_read
 
+
     return "-1"
+    # if lang == 'digits':
+    #     return "-1"
+    # else:
+    #     return get_number_from_image(image, config=config, lang='digits', filters=True)
 
 
 def get_card_data(img):

@@ -1,7 +1,12 @@
-import pyautogui, pywinauto, pygetwindow as gw
+import pyautogui, pygetwindow as gw, platform
 import time
 import cv2 as cv
 import numpy as np
+
+CURRENT_PLATFORM = platform.system()
+
+if (CURRENT_PLATFORM == "Windows"):  # library only for windows
+    import pywinauto
 
 
 def take_screenshot(wait_time):

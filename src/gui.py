@@ -1,10 +1,14 @@
 import platform
+import io  # for creating temp memory for images
+#import sys, os
 import PySimpleGUI as sg
 
+#sys.path.append(os.getcwd())
 from structs import game
 from static_data import static_game_data as sgd
+from static_data import vision_static_data as vsd
 
-CURRENT_PLATFORM = platform.platform()
+CURRENT_PLATFORM = platform.system()
 
 if (CURRENT_PLATFORM == "Windows"):  # vision currently only works on windows
   from vision import vision
@@ -50,6 +54,12 @@ class GUI:
     # screenshot to pass to reading. First entry is match, second is dict of
     # with player names as keys and corresponding list of screenshots as values
     self.all_screenshots = [0, {}]
+
+    self.match_data = {}  # keys are the attrs. like "Goals", values are values: [1,1]
+    self.full_player_data = []  # list of dicts, one dict per player with all stats
+
+    self.misreads = []  # All misread attrs, check vision.process_screenshots()
+    self.misread_idx = 0  # to be able to get the current misread value in loopingds
 
 
   ############################
@@ -187,6 +197,51 @@ class GUI:
     ]
 
     return layout
+
+  def create_screenshot_error_layout(self):
+    """
+    In case we get an issue where there is a -1 on an attribute
+    because it wasn't able to read uniformly over a few tries
+    """
+    curr_misread = self.misreads[self.misread_idx]
+    attribute = curr_misread[1]  # second value is the unread attribute
+
+    if (isinstance(curr_misread[0], int)):  # check if first value is an int
+      home_away = curr_misread[0]  # misread is 0 or 1, so home or away
+      screenshot = self.all_screenshots[0][home_away]  # 0th index is home team
+
+    else:  # curr_misread has misread for a player
+      player_name = curr_misread[0]
+      screenshot_idx = vsd.player_data_screenshot_indices[attribute]
+      screenshot = self.all_screenshots[1][player_name][screenshot_idx]
+
+    ss_resize = screenshot.copy()
+    width, height = ss_resize.size
+    ss_resize.thumbnail((width//2, height//2))  # make one quarter size
+
+    bio = io.BytesIO()  # create space in temp memory
+
+    ss_resize.save(bio, format="PNG")
+
+    layout = [
+      [sg.Image(bio.getvalue())],
+      [
+        sg.Text(f"The value for {attribute} could not be read. "
+                +"Please enter it manually:"),
+        sg.Input(key="attribute_value")
+      ]
+    ]
+    if (self.misread_idx == (len(self.misreads) - 1)):  # last screenshot
+      layout.append([sg.Button("Done")])
+    else:  # there are still other screenshots, direct to next
+      layout.append([sg.Button("Next")])
+
+    if (self.misread_idx != 0):  # in case we want to edit the previous ss
+      layout[-1].append(sg.Button("Previous"))
+    
+    return layout
+
+
 
 
   ###################################
@@ -372,6 +427,9 @@ class GUI:
 
 
   def run_post_game_options(self):
+    """
+    Run through all options after the game, this is just screenshots
+    """
     if (self.curr_event == "Add match facts"):
       # player false means match is screenshotted
       sc = vision.screenshot_fifa(player=False)
@@ -388,19 +446,26 @@ class GUI:
     elif (self.curr_event == "Done"):  # end match
       if (CURRENT_PLATFORM == "Windows"):
         # vision currently only works on windows
-        full_game_data = vision.process_screenshots(self.all_screenshots)
-        match_data = full_game_data[0]
-        full_player_data = full_game_data[1]
-        
-        self.game.add_match_data(match_data)
-        self.game.add_player_data(full_player_data)
+        full_game_data, self.misreads = vision.process_screenshots(self.all_screenshots)
 
-      self.game.write_all_data()  # in all cases, write relevant data for the game
+        self.match_data = full_game_data[0]
+        self.full_player_data = full_game_data[1]
+
+        if (len(self.misreads) != 0):  # have some undetermined parameters
+          self.curr_state = "Screenshot-check"  # set -1s to actual values
+          self.layout = self.create_screenshot_error_layout()
+          self.update_window()
+          return 0  # back out to show function
+        
+        # if no misreads, then we can set the
+        self.game.add_match_data(self.match_data.copy())
+        self.game.add_player_data(self.full_player_data.copy())
+
+      self.game.write_all_data()  # write relevant data for the game to json
 
       if (CURRENT_PLATFORM == "Windows"):
         # reset the screenshots for next game
         self.all_screenshots = []
-        self.screenshot_name_order = []
 
       self.curr_state = "Pre-Game"
       new_layout = self.create_pre_game_layout()  # go back to pregame
@@ -411,6 +476,47 @@ class GUI:
 
     else:
       return 1  # unexpected
+
+
+  def run_screenshot_fail_options(self):
+    """
+    Simple function to go through all options for screenshot verification. Note
+    that it is necessary that we move to the next screenshot at the end to not
+    get stuck in a loop.
+    """
+    if ((self.curr_event == "Done") or (self.curr_event == "Next")):
+      attr_value = self.curr_event["attribute_value"]
+      # first is either a player name or home/away int 0/1
+      player_home_away, attr = self.misreads[self.misread_idx]
+
+      if (isinstance(player_home_away, int)):  # it's match data
+        self.match_data[attr][player_home_away] = attr_value
+
+      else:  # it's a player name
+        for player_data in self.full_player_data:
+          if (player_data["NAME"] == player_home_away):
+            player_data[attr] = attr_value
+
+      self.misread_idx += 1
+
+    elif (self.curr_event == "Previous"):
+      self.misread_idx -= 1
+
+    if (self.misread_idx == len(self.misreads)):  # arrived at the end
+      # add the read in data
+      self.game.add_match_data(self.match_data.copy())
+      self.game.add_player_data(self.full_player_data.copy())
+      self.game.write_all_data()  # write it
+      self.misread_idx = 0  # reset it back to 0 for next game
+      # go back to pre-game
+      self.curr_state = "Pre-Game"
+      self.layout = self.create_pre_game_layout()  # go back to pregame
+
+    else:  # go to the next or previous screenshot
+      self.layout = self.create_screenshot_error_layout()
+
+    self.update_window()
+    return 0
       
   ###################################
   ##### DATA AMENDING FUNCTIONS #####
@@ -549,6 +655,9 @@ class GUI:
 
       elif (self.curr_state == "Post-Game"):
         failed = self.run_post_game_options()
+
+      elif (self.curr_state == "Screenshot-check"):
+        failed = self.run_screenshot_fail_options()
 
       else:  # some unaccounted for case
         print("Exiting.")

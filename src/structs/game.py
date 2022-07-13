@@ -14,7 +14,7 @@ path_to_pro_clubs_root = curr_dir[:pro_clubs_index]
 FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
                     + "pro-clubs/src/data/game_data.json")
 
-if (platform.platform() == "Windows"):
+if (platform.system() == "Windows"):
   FULL_GAME_DATA_PATH = (path_to_pro_clubs_root
                       + "pro-clubs\src\data\game_data.json")
 
