@@ -1,7 +1,7 @@
 import platform, time
 from pynput.keyboard import Controller
 
-from . import processing, util
+import processing, util
 
 CURRENT_PLATFORM = platform.system()
 
@@ -81,16 +81,16 @@ if __name__ == "__main__":
     # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
     screenshots = [0, {}]
     screenshots[0] = screenshot_fifa(player=False)
-    input("taken 1")
-    screenshots[1]["Timbo"] =  (screenshot_fifa())
-    input("taken 2")
-    screenshots[1]["Jutte"] =  (screenshot_fifa())
-    input("taken 3")
-    screenshots[1]["Tommus"] =  (screenshot_fifa())
-    input("taken 4")
-    screenshots[1]["DJ"] =  (screenshot_fifa())
-    input("taken 5")
-    screenshots[1]["Basti"] =  (screenshot_fifa())
+    # input("taken 1")
+    # screenshots[1]["Timbo"] =  (screenshot_fifa())
+    # input("taken 2")
+    # screenshots[1]["Jutte"] =  (screenshot_fifa())
+    # input("taken 3")
+    # screenshots[1]["Tommus"] =  (screenshot_fifa())
+    # input("taken 4")
+    # screenshots[1]["DJ"] =  (screenshot_fifa())
+    # input("taken 5")
+    # screenshots[1]["Basti"] =  (screenshot_fifa())
     start = time.time()
     print(process_screenshots(screenshots))
     print("time: " + str(time.time() - start))

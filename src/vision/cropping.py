@@ -29,11 +29,11 @@ def crop_player_data(screenshots):
     """
     images = [crop_rating(screenshots[0])]
     images.extend(crop_player_summary(screenshots[0]))
-    images.append(crop_card(screenshots[0]))
     images.extend(crop_player_specifics(screenshots[1], [1, 3, 10, 11]))
     images.extend(crop_player_specifics(screenshots[2], [0, 1, 2, 6, 7, 8]))
     images.extend(crop_player_specifics(screenshots[3], [0, 2, 5, 7, 8, 15]))
     images.extend(crop_player_specifics(screenshots[4], [9, 10], reverse_skip=True))
+    images.append(crop_card(screenshots[0]))
 
     return images
 

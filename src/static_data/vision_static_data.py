@@ -6,23 +6,6 @@ SHOOTING_SCREEN = 2
 PASSING_SCREEN = 3
 DEFENDING_SCREEN = 4
 
-
-# list with all attributes from the match facts screen
-game_data_attr = ["Possession", "Shots", "ExpectedGoals", "Passes",
-    "Tackles", "TacklesWon", "Interceptions", "Saves", "FoulsCommitted", "Offsides",
-    "Corners", "FreeKicks", "PenaltyKicks", "YellowCards", "RedCards", "DribbleSuccessRate",
-    "ShotAccuracy", "PassAccuracy"]
-
-# list with all attributes from the player performance screen
-player_data_attr = ["Rating", "Goals", "Assists", "Shots", "ShotAccuracy", "Passes", "PassAccuracy",
-    "Dribbles", "DribbleSuccessRate", "Tackles", "TackleSuccessRate", "Offsides", "FoulsCommitted",
-    "PossessionWon", "PossessionLost", "MinutesPlayed", "DistanceCovered", "DistanceSprinted", "YellowCard",
-    "RedCard", "Possession", "DribblesCompleted", "DistanceDribbled", "FoulsWon", "PenaltiesWon", "RegularDribble",
-    "ShieldDribble", "StrafeDribble", "Beat", "SkillmoveBeat", "Nutmeg", "KnockOns", "ShotsOnTarget",
-    "ShotsOffTarget", "ShotsBlocked", "NormalShots", "FinesseShots", "HeaderShots", "LowShots", "VolleyShots", "ChipShots",
-    "SetPiecesShots", "ExpectedAssits", "PassesCompleted", "PassesIntercepted", "OffsidePasses", "GroundPasses", "LobPasses",
-    "ThroughPasses", "LoftedThroughPasses", "Crosses", "PassesSetPieces", "AirDuelsWon", "BeatenByOpponent"]
-
 # index of screenshot for every player attribute
 player_data_screenshot_indices = {
     "Rating": SUMMARY_SCREEN,
@@ -123,8 +106,6 @@ player_exp_range_dict = {
     "MinutesPlayed": [0, 100],
     "DistanceCovered": [0, 100],
     "DistanceSprinted": [0, 100],
-    "YellowCard": [0, 1],
-    "RedCard": [0, 1],
     "Possession": [0, 50],
     "DribblesCompleted": [0, 20],
     "DistanceDribbled": [0, 10],
@@ -158,7 +139,9 @@ player_exp_range_dict = {
     "Crosses": [0, 20],
     "PassesSetPieces": [0, 30],
     "AirDuelsWon": [0, 20],
-    "BeatenByOpponent": [0, 20]
+    "BeatenByOpponent": [0, 20],
+    "YellowCard": [0, 1],
+    "RedCard": [0, 1]
 }
 
 # dictionary that defines the valid range for game data
@@ -203,8 +186,6 @@ player_valid_range_dict = {
     "MinutesPlayed": [0, MAX_VALUE],
     "DistanceCovered": [0, MAX_VALUE],
     "DistanceSprinted": [0, MAX_VALUE],
-    "YellowCard": [0, 1],
-    "RedCard": [0, 1],
     "Possession": [0, 100],
     "DribblesCompleted": [0, MAX_VALUE],
     "DistanceDribbled": [0, MAX_VALUE],
@@ -238,5 +219,7 @@ player_valid_range_dict = {
     "Crosses": [0, MAX_VALUE],
     "PassesSetPieces": [0, MAX_VALUE],
     "AirDuelsWon": [0, MAX_VALUE],
-    "BeatenByOpponent": [0, MAX_VALUE]
+    "BeatenByOpponent": [0, MAX_VALUE],
+    "YellowCard": [0, 1],
+    "RedCard": [0, 1],
 }

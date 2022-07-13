@@ -1,17 +1,28 @@
 from PIL import ImageOps
 import cv2 as cv
 import numpy as np
-import pytesseract
+import pytesseract, os, sys
 
-from . import cropping, util, dict_creater as dc
+import cropping, util
+
+cwd = os.getcwd()
+parent = os.path.dirname(cwd)
+sys.path.insert(0, parent) 
+
+from static_data import vision_static_data as vst
+
+# set path to traineddata for teseract
+os.environ['TESSDATA_PREFIX'] = './tess_traineddata'
 
 # define configs for pytesseract
-int_config = r'-c tessedit_char_whitelist=0123456789 --psm 10'
-float_config = r'-c tessedit_char_whitelist=0123456789. --psm 10'
+PYTESS_INT_CONFIG = r'-c tessedit_char_whitelist=0123456789 --psm 10'
+PYTESS_FLOAT_CONFIG = r'-c tessedit_char_whitelist=0123456789. --psm 10'
 
 # define indices where float is needed
-game_float_indices = [2, 20]
-player_float_indices = [0, 16, 17, 21, 41]
+GAME_FLOAT_INDICES = [2, 20]
+PLAYER_FLOAT_INDICES = [0, 16, 17, 20, 40]
+
+PLAYER_CARD_IMAGE_INDEX = 52 # index of image with card area
 
 
 def set_tesseract_path(path):
@@ -35,16 +46,37 @@ def get_game_data(screenshot):
         game_dict(dict): dictionary that contains all relevant data from the match facts screen
     """
     images = cropping.crop_game_data(screenshot)
+    attributes = list(vst.game_exp_range_dict.keys())
+
     data = []
+    misreads = []
 
     for i in range(len(images)):
         img = ImageOps.invert(images[i])
-        if i in game_float_indices:
-            data.append(float(get_number_from_image(np.array(img), config=float_config)))
-        else:
-            data.append(int(get_number_from_image(np.array(img))))
+        attribute = attributes[i % len(attributes)]
 
-    game_dict, misreads = dc.get_game_dict(data)
+        if i in GAME_FLOAT_INDICES:
+            data.append(float(get_number_from_image(np.array(img), attribute, player=False, config=PYTESS_FLOAT_CONFIG)))
+        else:
+            data.append(int(get_number_from_image(np.array(img), attribute, player=False)))
+
+        if data[i] == -1:
+            if i < len(attributes):
+                team = 0
+            else:
+                team = 1
+            misreads.append((team, attribute))
+
+    game_dict = {}
+    attribute_list = list(vst.game_exp_range_dict.keys())
+
+    for i in range(len(attribute_list)):
+        key = attribute_list[i]
+
+        value_home = data[i]
+        value_away = data[i + len(attributes)]
+
+        game_dict[key] = [value_home, value_away]
 
     return game_dict, misreads
 
@@ -64,25 +96,37 @@ def get_player_data(screenshots, name=""):
         player_dict(dict): dictionary that contains all relevant data from the player performance screen
     """
     images = cropping.crop_player_data(screenshots)
-    data = []
+    attributes = list(vst.player_exp_range_dict.keys())
+
+    misreads = []
+    player_dict = {}
+    player_dict["Name"] = name
 
     for i in range(len(images)):
-        if i==18: # index of image with card area
-            data.extend(get_card_data(images[i])) # already returned as ints in a list
-        elif i in player_float_indices:
-            img = ImageOps.invert(images[i])
-            data.append(float(get_number_from_image(np.array(img), config=float_config)))
+        attribute = attributes[i]
+
+        if i==PLAYER_CARD_IMAGE_INDEX: 
+            data = get_card_data(images[i]) # returned as ints in a list
+            player_dict[attribute] = data[0]
+            player_dict[attributes[i+1]] = data[1]
+            continue
+
+        img = ImageOps.invert(images[i])
+        
+        if i in PLAYER_FLOAT_INDICES:
+            data = float(get_number_from_image(np.array(img), attribute, config=PYTESS_FLOAT_CONFIG))
         else:
-            img = ImageOps.invert(images[i])
-            data.append(int(get_number_from_image(np.array(img))))
+            data = int(get_number_from_image(np.array(img), attribute))
 
-    game_dict, misreads = dc.get_player_dict(data, name)
+        if data == -1:
+            misreads.append((name, attribute))
 
-    return game_dict, misreads
+        player_dict[attribute] = data
+
+    return player_dict, misreads
 
 
-def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal_reads_to_accept=1,
-                            config=int_config, filters=True):
+def get_number_from_image(img, attribute, player=True, config=PYTESS_INT_CONFIG, filters=False):
     """
     Reads an image that should only contain a single line of numbers and returns the result as a string.
     The image will be resized if the result is unclear. For every resize a max number of reads are performed.
@@ -90,73 +134,49 @@ def get_number_from_image(img, max_reads_per_size=10, max_resize_factor=5, equal
 
     Parameters:
         img(image): the image to read
-        max_reads_per_size(int): max reads per resize
-        max_resize_factor(int): max resizes
-        equal_reads_to_accept(int): number of equals reads the accept the result
-        config(string): custom config for tesseract
-        filters(bool): if extra filters should be applied to the image
+        attribute(string): which attribute is read from the image
+        player(bool): if the attribute belongs to the player screen, if not its the match screen
+        config(string): custom config for pytesseract
+        filters(bool): if additional filters should be applied (grayscale and thresholding)
     
     Returns:
-        numbers(string): numbers from image
+        number(string): number from image
     """
     height, width, channels = img.shape
 
-    if filters: # TODO: specify filters
+    # apply grayscale and thresholding filter if wanted, may improve accuracy
+    if filters:
         img = util.get_grayscale(img)
         img = util.thresholding(img)
 
     number = pytesseract.pytesseract.image_to_string(img, config=config, lang='digits') # TODO: different path for digits data
     number = number.split()
 
-    if len(number) == 0 or float(number[0]) > 250: # TODO: implement such that it checks for expected range
-        print("could not read")
-        image_resized = cv.resize(img, (width * 2, height * 2))
+    if len(number) == 0 or not check_expected_range(float(number[0]), attribute, player):
+        for resize_factor in range(2, 5):
+            img_resized = cv.resize(img, (width * resize_factor, height * resize_factor))
 
-        number = pytesseract.pytesseract.image_to_string(image_resized, config=config, lang='eng')
-        number = number.split()
-
-        if len(number) == 0:
-            return "-1"
-
-    return number[0]
-
-    for size_factor in range(max_resize_factor):
-        start_size = 1
-        image_resized = cv.resize(img, (width * (size_factor + start_size), height * (size_factor + start_size)))
-
-        equal_reads = 1
-        last_read = ""
-        for i in range(max_reads_per_size):
-            number = pytesseract.pytesseract.image_to_string(image_resized, config=config)
+            number = pytesseract.pytesseract.image_to_string(img_resized, config=config, lang='eng')
             number = number.split()
 
             if len(number) == 0:
-                break
-            else:
-                # check if first character is a dot
-                if util.split(number[0])[0] == '.':
-                    continue
-                # check if the first character is '0' and the following character is not '.' or '0',
-                # then the read was invalid
-                if len(util.split(number[0])) > 1:
-                    if util.split(number[0])[0] == '0' and util.split(number[0])[1] != '.'\
-                            and util.split(number[0])[1] != '0':
-                        continue
-                if last_read != number[0]:
-                    last_read = number[0]
-                    equal_reads = 1
-                else:
-                    equal_reads += 1
+                continue
 
-            if equal_reads >= equal_reads_to_accept:
-                return last_read
+            if check_expected_range(float(number[0]), attribute, player):
+                return number[0]
+
+        return "-1"
+
+    return number[0]
 
 
-    return "-1"
-    # if lang == 'digits':
-    #     return "-1"
-    # else:
-    #     return get_number_from_image(image, config=config, lang='digits', filters=True)
+def check_expected_range(value, key, player):
+    if player:
+        exp_range = vst.player_exp_range_dict[key]
+    else:
+        exp_range = vst.game_exp_range_dict[key]
+
+    return (exp_range[0] <= value <= exp_range[1])
 
 
 def get_card_data(img):
