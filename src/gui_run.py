@@ -7,6 +7,7 @@ import PySimpleGUI as sg
 from structs import game
 from static_data import static_game_data as sgd
 from static_data import vision_static_data as vsd
+from gui import helper
 
 CURRENT_PLATFORM = platform.system()
 
@@ -50,6 +51,8 @@ class GUI:
     self.game_set = False  # for any and home
     self.add_goal_for = False
     self.add_goal_against = False
+    self.previous_goal_minute = 0  # which minute the previous goal was scored
+    self.prev_stoppage_minute = 0  # which stoppage time min the prev goal scored
 
     # screenshot to pass to reading. First entry is match, second is dict of
     # with player names as keys and corresponding list of screenshots as values
@@ -91,11 +94,24 @@ class GUI:
     layout = [
       [sg.Text("Who is playing? Pressing the button is toggling player on/off. Default is off.")],
       [
-        sg.Button(name) for name in self.acc_names  # generalise
+        sg.Button(name, button_color="red", key=f"{name}") for name in self.acc_names
       ],
-      [sg.Text("Division: "), sg.Input(key="-DIV-")],
-      [sg.Text("Number of Games played: "), sg.Input(key="-DIV_GAME_NO-")],
-      [sg.Text("Current points: "), sg.Input(key="-POINTS-")],
+      [sg.Text(key="enough_players")],
+      [
+        sg.Text("Division: "),
+        sg.Input(key="-DIV-", size=(2,1)),
+        sg.Text(key="div_error")  # third line can be updated for errors
+      ],
+      [
+        sg.Text("Number of Games played: "),
+        sg.Input(key="-DIV_GAME_NO-", size=(2,1)),
+        sg.Text(key="n_games_error")
+      ],
+      [
+        sg.Text("Current points: "), 
+        sg.Input(key="-POINTS-", size=(2,1)),
+        sg.Text(key="n_points_error")
+      ],
       [sg.Button("Complete")],
       [sg.Button("Exit")]
     ]
@@ -157,24 +173,36 @@ class GUI:
         layout.append([sg.Button("Finish Game")])
     else:
       layout.append([sg.Text("Who is any:")] + 
-                    [sg.Combo(self.players + ["AI"], key="any")])  # either a player or AI
+                    [sg.Combo(self.players + ["AI"],
+                              key="any",
+                              default_value="AI")])  # either a player or AI
       layout.append([sg.Checkbox("Home:", key="home")])
       layout.append([sg.Button("Done")])  # signal to programme that the above two are set
     
     if (self.add_goal_for):
-      layout.append([sg.Text("Minute: "), sg.Input(key="minute"),
-                     sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
+      layout.append([sg.Text("Minute: "),
+                     sg.Input(key="minute", size=(4,1)),
+                     sg.Button("Stoppage Time", key="stoppage_button"),
+                     sg.Text("+", key="stoppage_text", visible=False),
+                     sg.Input(key="stoppage", size=(2,1), visible=False)])
+      layout.append([sg.Text(key="minute_valid", text_color="blue", visible=False)])
       layout.append([sg.Text("Scorer: "), sg.Combo(self.players + ["AI"], key="scorer")])
       layout.append([sg.Text("Assist: "), sg.Combo(self.players + ["AI"], key="assist")])
       layout.append([sg.Checkbox("Penalty", default=False, key="pen")])
       layout.append([sg.Checkbox("Own Goal", default=False, key="og")])
+      layout.append([sg.Text(key="goal_valid", text_color="blue", visible=False)])
       layout.append([sg.Button("Done")])
 
     elif (self.add_goal_against):
-      layout.append([sg.Text("Minute: "), sg.Input(key="minute"),
-                     sg.Text("Stoppage Time: "), sg.Input(key="stoppage")])
+      layout.append([sg.Text("Minute: "),
+                     sg.Input(key="minute", size=(4,1)),
+                     sg.Button("Stoppage Time", key="stoppage_button"),
+                     sg.Text("+", key="stoppage_text", visible=False),
+                     sg.Input(key="stoppage", size=(2,1), visible=False)])
+      layout.append([sg.Text(key="minute_valid", text_color="blue", visible=False)])
       layout.append([sg.Checkbox("Penalty", default=False, key="pen")])
       layout.append([sg.Text("Own Goal"), sg.Combo(self.players + ["AI"], key="og")])
+      layout.append([sg.Text(key="goal_valid", text_color="blue", visible=False)])
       layout.append([sg.Button("Done")])
 
     return layout
@@ -274,28 +302,67 @@ class GUI:
 
       if (name in self.players):  # player already set -> unset
         print(f"Removing player: {name}.")
+        # set the button to red because player is no longer playing
+        self.window[name].update(button_color="red")
         self.players.remove(name)
+
       else:  # player not set, -> set them
         print(f"Adding player: {name}.")
+        # set the button of a present player to green
+        self.window[name].update(button_color="green")
         self.players.append(name)
 
       return 0
 
     elif (self.curr_event == "Complete"):  # division, game and points set
-      self.curr_div = int(self.curr_values["-DIV-"])
-      self.n_games_played = int(self.curr_values["-DIV_GAME_NO-"])
-      self.curr_points = int(self.curr_values["-POINTS-"])
+      div = self.curr_values["-DIV-"]
+      n_games = self.curr_values["-DIV_GAME_NO-"]
+      n_points = self.curr_values["-POINTS-"]
+      all_valid, invalid_values = helper.check_session_setup(div, n_games, n_points)
+      print(invalid_values)
 
-      new_layout = self.create_pre_game_layout()
-      self.layout = new_layout
-      self.update_window()  # update the window
-      self.curr_state = "Pre-Game"
+      n_players = len(self.players)
+      players_valid = n_players >= 2
 
-      print(f"Starting new session with players: {self.players}.")
-      print(f"Starting in division {self.curr_div} with {self.curr_points} "
-           +f"points in {self.n_games_played} games played.")
+      if (all_valid and players_valid):  # input accepted and valid
+        self.curr_div = int(div)
+        self.n_games_played = int(n_games)
+        self.curr_points = int(n_points)
 
-      return 0
+        new_layout = self.create_pre_game_layout()
+        self.layout = new_layout
+        self.update_window()  # update the window
+        self.curr_state = "Pre-Game"
+
+        print(f"Starting new session with players: {self.players}.")
+        print(f"Starting in division {self.curr_div} with {self.curr_points} "
+             +f"points in {self.n_games_played} games played.")
+        
+        return 0
+
+      else:  # some inputs are invalid
+        if (not players_valid):
+          err_msg = "There are not enough players. Add more to the game."
+          self.window["enough_players"].update(err_msg, text_color="blue")
+
+        for invalid_value in invalid_values:
+          field_name = invalid_value + "_error"  # for indexing in window
+          error_message = "Invalid value"
+
+          if (invalid_value == "div"):
+            print(f"Division is invalid. Has value {div}.")
+            error_message += f" \"{div}\". Division must be between 1-10."
+          elif (invalid_value == "n_games"):
+            print(f"Number of games is invalid. Has value {n_games}.")
+            error_message += f" \"{n_games}\". Games played must be between 0-9."
+          elif (invalid_value == "n_points"):
+            print(f"Number of points is invalid. Has value {n_points}.")
+            error_message += f" \"{n_points}\". This is not possible."
+
+          # update the window with the error message(s) and try again
+          self.window[field_name].update(error_message, text_color="blue")
+          
+        return 0
 
     else:  # unexpected value/event
       return 1
@@ -370,12 +437,62 @@ class GUI:
       self.add_goal_against = True
       new_layout = self.create_game_layout()
 
+    elif (self.curr_event == "stoppage_button"):
+      minute = self.curr_values["minute"]
+      try:
+        int_minute = int(minute)
+        if (int_minute == 45) or (int_minute == 90):
+          self.window["stoppage_button"].update(visible=False)
+          self.window["stoppage_text"].update(visible=True)
+          self.window["stoppage"].update(visible=True)
+          # make sure to turn off error message too
+          self.window["minute_valid"].update(visible=False)
+        else:  # don't show stoppage time input without 45th or 90th
+          err_msg = "Can only add stoppage time in 45th and 90th minute"
+          self.window["minute_valid"].update(err_msg, visible=True)
+  
+      except ValueError:
+        err_msg = "Can only add stoppage time in 45th and 90th minute"
+        self.window["minute_valid"].update(err_msg, visible=True)
+      return 0  # do not update window in the same way as others
+
     elif ((self.curr_event == "Done") and self.add_goal_for):
-      self.add_goal_for = False  # unset after finishing
-      minute = int(self.curr_values["minute"])
+      # when going back into the function, remove the error messages
+      self.window["minute_valid"].update(visible=False)
+      self.window["goal_valid"].update(visible=False)
+
+      # raw check minute, only accept if int between 1-90 and after prev goal
+      try:
+        minute = int(self.curr_values["minute"])
+        if (minute > 90) or (minute < 1):
+          self.window["minute_valid"].update("Enter a valid minute.", visible=True)
+          return 0
+        elif (minute < self.previous_goal_minute):
+          err_msg = "The previous goal was scored in minute "
+          err_msg += f"{self.previous_goal_minute}. Enter a valid minute."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+        
+      except ValueError:  # minute is not castable to int
+        self.window["minute_valid"].update("Enter a valid minute.", visible=True)
+        return 0
+      
       # don't convert stoppage time to int yet, need to check if it exists
       try:
         stoppage_time = int(self.curr_values["stoppage"])
+        if (stoppage_time < 1) or (stoppage_time > 10):
+          err_msg = "Invalid or unreasonable stoppage time value. Should be 1-10."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+        
+        # make sure the goal was scored after the last one
+        # first expression in the statement is to make sure 45+3 isnt after 90+2
+        elif ((self.previous_goal_minute == minute) and
+              (stoppage_time < self.prev_stoppage_minute)):
+          err_msg = "Previous goal was scored after this. Not possible."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+
       except ValueError:
         stoppage_time = None  # if not an int, we reset to nonexistent
       
@@ -384,29 +501,99 @@ class GUI:
       pen = self.curr_values["pen"]
       og = self.curr_values["og"]
 
+      # cover own goal cases
+      if (og and pen):
+        err_msg = "Can't have an own goal and a penalty at the same time."
+        self.window["goal_valid"].update(err_msg, visible=True)
+        return 0
+
+      elif (og and scorer):
+        err_msg = "Can't have a scorer of an opponent's own goal."
+        self.window["goal_valid"].update(err_msg, visible=True)
+        return 0
+
+      elif (not(og) and not(scorer)):  # no scorer is set for non-og
+        err_msg = "If not an own goal, there must be a scorer."
+        self.window["goal_valid"].update(err_msg, visible=True)
+        return 0
+
       self.game.add_goal_for(minute, player_name=scorer, assister=assist, pen=pen,
                              stoppage_time=stoppage_time, og=og)
 
-      new_layout = self.create_game_layout()
+      # if a valid goal, update the previous minute and stoppage time
+      self.previous_goal_minute = minute
+      if not(stoppage_time is None):
+        self.prev_stoppage_minute = stoppage_time
 
+      self.add_goal_for = False  # unset before setting new layout
+      new_layout = self.create_game_layout()
+      
 
     elif ((self.curr_event == "Done") and self.add_goal_against):
-      self.add_goal_against = False  # unset after finishing
-      minute = int(self.curr_values["minute"])
+      # many of the lines below are copied from goal for
+      # this is necessary because readability becomes difficult otherwise
+
+      # when going back into the function, remove the error messages
+      self.window["minute_valid"].update(visible=False)
+      self.window["goal_valid"].update(visible=False)
+
+      # raw check minute, only accept if int between 1-90 and after prev goal
+      try:
+        minute = int(self.curr_values["minute"])
+        if (minute > 90) or (minute < 1):
+          self.window["minute_valid"].update("Enter a valid minute.", visible=True)
+          return 0
+        elif (minute < self.previous_goal_minute):
+          err_msg = "The previous goal was scored in minute "
+          err_msg += f"{self.previous_goal_minute}. Enter a valid minute."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+        
+      except ValueError:  # minute is not castable to int
+        self.window["minute_valid"].update("Enter a valid minute.", visible=True)
+        return 0
+      
       # don't convert stoppage time to int yet, need to check if it exists
       try:
         stoppage_time = int(self.curr_values["stoppage"])
+        if (stoppage_time < 1) or (stoppage_time > 10):
+          err_msg = "Invalid or unreasonable stoppage time value. Should be 1-10."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+        
+        # make sure the goal was scored after the last one
+        # first expression in the statement is to make sure 45+3 isnt after 90+2
+        elif ((self.previous_goal_minute == minute) and
+              (stoppage_time < self.prev_stoppage_minute)):
+          err_msg = "Previous goal was scored after this. Not possible."
+          self.window["minute_valid"].update(err_msg, visible=True)
+          return 0
+
       except ValueError:
         stoppage_time = None  # if not an int, we reset to nonexistent
+      
       pen = self.curr_values["pen"]
-      og = self.curr_values["og"]  # this will hold a string now
+      og = self.curr_values["og"]
+
+      # cover own goal cases
+      if (og and pen):
+        err_msg = "Can't have an own goal and a penalty at the same time."
+        self.window["goal_valid"].update(err_msg, visible=True)
+        return 0
 
       if (not og):  # if own goal assister is "", aka it's not an own goal
         self.game.add_goal_against(minute, stoppage_time=stoppage_time, pen=pen)
       else:  # there is an own goal assister, so definitely not a pen
         self.game.add_goal_against(minute, stoppage_time=stoppage_time, og=og)
-
+      
+      # if a valid goal, update the previous minute and stoppage time
+      self.previous_goal_minute = minute
+      if not(stoppage_time is None):
+        self.prev_stoppage_minute = stoppage_time
+      
+      self.add_goal_against = False  # unset before setting new layout
       new_layout = self.create_game_layout()
+      
 
     elif (self.curr_event == "Finish Game"):
       # Game is over, need to set several things now

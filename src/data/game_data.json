@@ -408,5 +408,68 @@
     ],
     "GOALS_AGAINST": [],
     "PLAYER_DATA": []
+  },
+  {
+    "GAME_ID": 4,
+    "DIVISION": 3,
+    "DIV_GAME_NO": 1,
+    "POINTS_BEFORE": 3,
+    "RESULT": [
+      2,
+      1
+    ],
+    "RESULT_TYPE": "W",
+    "ANY": "Jutte",
+    "HOME": 1,
+    "GOALS_FOR": [
+      {
+        "MINUTE": 45,
+        "STOPPAGE_TIME": 1,
+        "SCORE": [
+          1,
+          1
+        ],
+        "PENALTY": 0,
+        "OG": 0,
+        "ID": 0,
+        "PLAYER_NAME": "Timbo",
+        "ASSIST_ID": 0
+      },
+      {
+        "MINUTE": 65,
+        "SCORE": [
+          2,
+          1
+        ],
+        "PENALTY": 1,
+        "OG": 0,
+        "ID": 1,
+        "PLAYER_NAME": "Jutte",
+        "ASSIST_ID": 1
+      }
+    ],
+    "ASSISTS": [
+      {
+        "ID": 0,
+        "GOAL_ID": 0,
+        "PLAYER_NAME": "DJ"
+      },
+      {
+        "ID": 1,
+        "GOAL_ID": 1,
+        "PLAYER_NAME": "DJ"
+      }
+    ],
+    "GOALS_AGAINST": [
+      {
+        "MINUTE": 23,
+        "SCORE": [
+          0,
+          1
+        ],
+        "PENALTY": 1
+      }
+    ],
+    "PLAYER_DATA": []
   }
 ]
