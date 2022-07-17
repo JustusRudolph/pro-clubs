@@ -1,7 +1,7 @@
-import platform, time
-from pynput.keyboard import Controller
+import platform, time, pyautogui, pydirectinput
+from pynput.keyboard import Controller, KeyCode
 
-import processing, util
+from . import processing, util
 
 CURRENT_PLATFORM = platform.system()
 
@@ -74,13 +74,14 @@ def process_screenshots(screenshots, path='C:\\Program Files\\Tesseract-OCR\\tes
         misreads.extend(player_misreads)
 
     return [game_dict, player_dicts], misreads
+    
 
 
 # main function for testing
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
-    screenshots = [0, {}]
-    screenshots[0] = screenshot_fifa(player=False)
+    # screenshots = [0, {}]
+    # screenshots[0] = screenshot_fifa(player=False)
     # input("taken 1")
     # screenshots[1]["Timbo"] =  (screenshot_fifa())
     # input("taken 2")
@@ -91,6 +92,6 @@ if __name__ == "__main__":
     # screenshots[1]["DJ"] =  (screenshot_fifa())
     # input("taken 5")
     # screenshots[1]["Basti"] =  (screenshot_fifa())
-    start = time.time()
-    print(process_screenshots(screenshots))
-    print("time: " + str(time.time() - start))
+    # start = time.time()
+    # print(process_screenshots(screenshots))
+    # print("time: " + str(time.time() - start))

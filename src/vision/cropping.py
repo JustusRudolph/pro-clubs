@@ -1,3 +1,18 @@
+# defines the position of the images
+# position is given as a list in the following order: left, top, right, bottom
+crop_data_dict = {
+    "RATING": [3.45, 5.22, 3.13, 4.1],
+    "NAME": [7.5, 5.5, 3.8, 4],
+    "CARD_AREA": [6, 3.8, 5.9, 3.7],
+    "PLAYER_SUMMARY": [1.12, 3.78, 1.08, 1.14],
+    "PLAYER_SPECIFICS": [1.09, 3.3, 1.04, 1.14],
+    "HOME_DATA": [2.9, 4.35, 2.58, 1.1],
+    "AWAY_DATA": [1.62, 4.35, 1.53, 1.1],
+    "HOME_SIDE_DATA": [6.4, 4.85],
+    "AWAY_SIDE_DATA": [1.27, 1.18]
+}
+
+
 def crop_game_data(screenshot):
     """
     Crops the game data from a screenshot taken in the match facts screen.
@@ -27,42 +42,42 @@ def crop_player_data(screenshots):
     Returns:
         images(list): cropped images of the player data
     """
-    images = [crop_rating(screenshots[0])]
+    images = [crop_image(screenshots[0], crop_data_dict["RATING"])]
     images.extend(crop_player_summary(screenshots[0]))
     images.extend(crop_player_specifics(screenshots[1], [1, 3, 10, 11]))
     images.extend(crop_player_specifics(screenshots[2], [0, 1, 2, 6, 7, 8]))
     images.extend(crop_player_specifics(screenshots[3], [0, 2, 5, 7, 8, 15]))
     images.extend(crop_player_specifics(screenshots[4], [9, 10], reverse_skip=True))
-    images.append(crop_card(screenshots[0]))
+    images.append(crop_image(screenshots[0], crop_data_dict["CARD_AREA"]))
 
     return images
 
 
-def crop_rating(img):
+def crop_image(img, position):
     """
-    Crops the rating from the image and returns the cropped image.
+    Crops an image at the given position.
 
     Parameters:
-        img(image): image of the player performance screen
+        img(image): source image to crop
+        position(list): position to crop in the following order:
+                        left, top, right, bottom
 
     Returns:
-        img_rating(image): image that only contains the rating 
+        cropped_img(image): image that was cropped
     """
     width, height = img.size
 
-    left = width / 3.45
-    top = height / 5.22
-    right = width / 3.13
-    bottom = height / 4.1
+    left = width / position[0]
+    top = height / position[1]
+    right = width / position[2]
+    bottom = height / position[3]
 
-    img_rating = img.crop((left, top, right, bottom))
-
-    return img_rating
+    return img.crop((left, top, right, bottom))
 
 
 def crop_player_summary(img):
     """
-    Crops the stats from the player performance screen. For every single stat an image is created.
+    Crops the stats from the summary player screen. For every single stat an image is created.
 
     Parameters:
         img(image): image of the player performance screen
@@ -70,15 +85,8 @@ def crop_player_summary(img):
     Returns:
         images_stats(list): list of every single stat as an image
     """
-    width, height = img.size
-
-    left = width / 1.12
-    top = height / 3.78
-    right = width / 1.08
-    bottom = height / 1.14
-
     # first crop all stats in a single image
-    img_stats = img.crop((left, top, right, bottom))
+    img_stats = crop_image(img, crop_data_dict["PLAYER_SUMMARY"])
 
     # crop every single stat from the first image
     images_stats = []
@@ -89,15 +97,20 @@ def crop_player_summary(img):
 
 
 def crop_player_specifics(img, indices_to_skip, reverse_skip=False):
-    width, height = img.size
+    """
+    Crops the stats from a specific player screen (excluding the summary screen).
+    For every single stat an image is created.
 
-    left = width / 1.09
-    top = height / 3.3
-    right = width / 1.04
-    bottom = height / 1.14
+    Parameters:
+        img(image): image of the player screen
+        indices_to_skip(list): list of int indices to define which stats are skipped
+        reverse_skip(bool): when true, indices_to_skip list defines which stats are not skipped
 
+    Returns:
+        images_stats(list): list of every single stat as an image
+    """
     # first crop all stats in a single image
-    img_stats = img.crop((left, top, right, bottom))
+    img_stats = crop_image(img, crop_data_dict["PLAYER_SPECIFICS"])
 
     images_stats = []
     for i in range(16):
@@ -147,21 +160,10 @@ def crop_team_data(img, home):
     Returns:
         images_stats(list): list of every single stat as an image
     """
-    width, height = img.size
-
     if home:
-        left = width / 2.9
-        top = height / 4.35
-        right = width / 2.58
-        bottom = height / 1.1
+        img_stats = crop_image(img, crop_data_dict["HOME_DATA"])
     else:
-        left = width / 1.62
-        top = height / 4.35
-        right = width / 1.53
-        bottom = height / 1.1
-
-    # first crop all stats in a single image
-    img_stats = img.crop((left, top, right, bottom))
+        img_stats = crop_image(img, crop_data_dict["AWAY_DATA"])
 
     # crop every single stat from the first image
     images_stats = []
@@ -185,74 +187,14 @@ def crop_team_side_data(img, home):
     Returns:
         images(list): list of every single stat as an image
     """
-    width, height = img.size
-
     if home:
-        left = width / 6.4
-        right = width / 4.85
+        position = crop_data_dict["HOME_SIDE_DATA"]
     else:
-        left = width / 1.27
-        right = width / 1.18
+        position = crop_data_dict["AWAY_SIDE_DATA"]
 
     images = []
-
-    top = height / 3.6
-    bottom = height / 3.05
-
-    images.append(img.crop((left, top, right, bottom)))
-
-    top = height / 1.92
-    bottom = height / 1.77
-
-    images.append(img.crop((left, top, right, bottom)))
-
-    top = height / 1.32
-    bottom = height / 1.24
-
-    images.append(img.crop((left, top, right, bottom)))
+    images.append(crop_image(img, [position[0], 3.6, position[1], 3.05]))
+    images.append(crop_image(img, [position[0], 1.92, position[1], 1.77]))
+    images.append(crop_image(img, [position[0], 1.32, position[1], 1.24]))
 
     return images
-
-
-def crop_name(img):
-    """
-    Crops the name from the player performance screen.
-
-    Parameters:
-        img(image): iamge of the player performance screen
-
-    Returns:
-        img_name(image): image that only contains the name
-    """
-    width, height = img.size
-
-    left = width / 7.5
-    top = height / 5.5
-    right = width / 3.8
-    bottom = height / 4
-
-    img_name = img.crop((left, top, right, bottom))
-
-    return img_name
-
-
-def crop_card(img):
-    """
-    Crops the area of the player performance screen where a yellow/red card would be showed.
-
-    Parameters:
-        img(image): image of the player performance screen
-
-    Returns:
-        img_card(image):  image of area where only the card is displayed
-    """
-    width, height = img.size
-
-    left = width / 6
-    top = height / 3.8
-    right = width / 5.9
-    bottom = height / 3.7
-
-    img_card = img.crop((left, top, right, bottom))
-
-    return img_card
