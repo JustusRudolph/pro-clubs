@@ -23,9 +23,10 @@ os.environ['TESSDATA_PREFIX'] = './vision/tess_traineddata' # TODO: fix path
 PYTESS_INT_CONFIG = r'-c tessedit_char_whitelist=0123456789 --psm 10'
 PYTESS_FLOAT_CONFIG = r'-c tessedit_char_whitelist=0123456789. --psm 10'
 
-# define indices where float is needed
-GAME_FLOAT_INDICES = [2, 20]
-PLAYER_FLOAT_INDICES = [0, 16, 17, 20, 40]
+# define attributes that need float represantation
+GAME_FLOAT_ATTRIBUTES = ["ExpectedGoals"]
+PLAYER_FLOAT_ATTRIBUTES = ["DistanceCovered", "DistanceSprinted", "DistanceDribbled",
+                           "xGExcludingPenalties", "ExpectedAssits", "Rating"]
 
 PLAYER_CARD_IMAGE_INDEX = 52 # index of image with card area
 
@@ -65,7 +66,7 @@ def get_game_data(screenshot):
         attribute = attributes[i % len(attributes)]
 
         # check if int or float has to be read, then append the read string
-        if i in GAME_FLOAT_INDICES:
+        if attribute in GAME_FLOAT_ATTRIBUTES:
             data.append(float(read_number_from_image(np.array(img),attribute, player=False,
                                                      config=PYTESS_FLOAT_CONFIG)))
         else:
@@ -116,21 +117,14 @@ def get_player_data(screenshots, name=""):
     player_dict = {}
     player_dict["Name"] = name
 
-    for i in range(len(images)):
+    for i in range(len(images)-1):
         attribute = attributes[i]
-
-        # extra case for the image of the card area
-        if i==PLAYER_CARD_IMAGE_INDEX: 
-            data = get_card_data(images[i]) # returned as ints in a list
-            player_dict[attribute] = data[0]
-            player_dict[attributes[i+1]] = data[1]
-            continue
 
         # invert the image to increase tesseract accuracy
         img = ImageOps.invert(images[i])
         
         # check if int or float has to be read, then append the read string
-        if i in PLAYER_FLOAT_INDICES:
+        if attribute in PLAYER_FLOAT_ATTRIBUTES:
             data = float(read_number_from_image(np.array(img), attribute, config=PYTESS_FLOAT_CONFIG))
         else:
             data = int(read_number_from_image(np.array(img), attribute))
@@ -139,6 +133,11 @@ def get_player_data(screenshots, name=""):
             misreads.append((name, attribute))
 
         player_dict[attribute] = data
+
+    # card data is always at the end
+    data = get_card_data(images[-1]) # returned as ints in a list
+    player_dict[attributes[-2]] = data[0]
+    player_dict[attributes[-1]] = data[1]
 
     return player_dict, misreads
 

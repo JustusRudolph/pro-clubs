@@ -2,11 +2,15 @@ import pyautogui, pygetwindow as gw, platform
 import time
 import cv2 as cv
 import numpy as np
+import pynput.mouse as mouse, pynput.keyboard as keyboard
 
 CURRENT_PLATFORM = platform.system()
 
 if (CURRENT_PLATFORM == "Windows"):  # library only for windows
     import pywinauto
+
+MOUSE_CONTROLLER = mouse.Controller()
+KEYBOARD_CONTROLLER = keyboard.Controller()
 
 
 def take_screenshot(wait_time):
@@ -31,6 +35,37 @@ def focus_to_window(window_title=None):
     window = gw.getWindowsWithTitle(window_title)[0]
     if window.isActive == False:
         pywinauto.application.Application().connect(handle=window._hWnd).top_window().set_focus()
+
+
+def mouse_click(btn, wait_time=0.1):
+    """
+    Simulates a mouse click by pressing the given mouse button, waiting the given time
+    and then releasing the button again.
+    """
+    MOUSE_CONTROLLER.press(btn)
+    time.sleep(wait_time)
+    MOUSE_CONTROLLER.release(btn)
+
+
+def mouse_move_down_with_click(btn, pixel_amount, wait_time=0.1):
+    """
+    Simulates moving the mouse down while a button is pressed.
+    """
+    MOUSE_CONTROLLER.press(btn)
+    time.sleep(wait_time)
+    MOUSE_CONTROLLER.move(0, pixel_amount)
+    time.sleep(wait_time)
+    MOUSE_CONTROLLER.release(btn)
+
+
+def keyboard_press(key, wait_time=0.1):
+    """
+    Simulates a key press by pressing the given key, waiting the given time
+    and then releasing the key again.
+    """
+    KEYBOARD_CONTROLLER.press(key)
+    time.sleep(wait_time)
+    KEYBOARD_CONTROLLER.release(key)
 
 
 def get_main_color(img):

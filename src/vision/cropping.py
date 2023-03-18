@@ -5,7 +5,8 @@ crop_data_dict = {
     "NAME": [7.5, 5.5, 3.8, 4],
     "CARD_AREA": [6, 3.8, 5.9, 3.7],
     "PLAYER_SUMMARY": [1.12, 3.78, 1.08, 1.14],
-    "PLAYER_SPECIFICS": [1.09, 3.3, 1.04, 1.14],
+    "PLAYER_SPECIFICS": [1.09, 3.3, 1.06, 1.14],
+    "PLAYER_SPECIFICS_SCROLLED_DOWN": [1.09, 3.66, 1.06, 1.14],
     "HOME_DATA": [2.9, 4.35, 2.58, 1.1],
     "AWAY_DATA": [1.62, 4.35, 1.53, 1.1],
     "HOME_SIDE_DATA": [6.4, 4.85],
@@ -44,10 +45,10 @@ def crop_player_data(screenshots):
     """
     images = [crop_image(screenshots[0], crop_data_dict["RATING"])]
     images.extend(crop_player_summary(screenshots[0]))
-    images.extend(crop_player_specifics(screenshots[1], [1, 3, 10, 11]))
-    images.extend(crop_player_specifics(screenshots[2], [0, 1, 2, 6, 7, 8]))
-    images.extend(crop_player_specifics(screenshots[3], [0, 2, 5, 7, 8, 15]))
-    images.extend(crop_player_specifics(screenshots[4], [9, 10], reverse_skip=True))
+    images.extend(crop_player_specifics(screenshots[1], [[1, 3, 5, 14, 15], [13, 14, 15, 16]]))
+    images.extend(crop_player_specifics(screenshots[2], [[0, 2, 6, 8, 9, 11, 12, 13, 14, 15], [10, 11, 12, 13, 14, 15, 16]]))
+    images.extend(crop_player_specifics(screenshots[3], [[0, 5, 8, 13], [11, 12, 13, 14, 15, 16]]))
+    images.extend(crop_player_specifics(screenshots[4], [[6], [6, 7, 9]], reverse_skip=[1, 1]))
     images.append(crop_image(screenshots[0], crop_data_dict["CARD_AREA"]))
 
     return images
@@ -96,7 +97,7 @@ def crop_player_summary(img):
     return images_stats
 
 
-def crop_player_specifics(img, indices_to_skip, reverse_skip=False):
+def crop_player_specifics(imgs, indices_to_skip, reverse_skip=[0, 1]):
     """
     Crops the stats from a specific player screen (excluding the summary screen).
     For every single stat an image is created.
@@ -110,17 +111,30 @@ def crop_player_specifics(img, indices_to_skip, reverse_skip=False):
         images_stats(list): list of every single stat as an image
     """
     # first crop all stats in a single image
-    img_stats = crop_image(img, crop_data_dict["PLAYER_SPECIFICS"])
+    img_stats = crop_image(imgs[0], crop_data_dict["PLAYER_SPECIFICS"])
+    img_stats_scrolled_down = crop_image(imgs[1], crop_data_dict["PLAYER_SPECIFICS_SCROLLED_DOWN"])
 
     images_stats = []
+
+    # first crop all single stats from "standard" view
     for i in range(16):
-        if reverse_skip:
-            if i not in indices_to_skip:
+        if reverse_skip[0]:
+            if i not in indices_to_skip[0]:
                 continue
         else:
-            if i in indices_to_skip:
+            if i in indices_to_skip[0]:
                 continue
         images_stats.append(crop_single_stat(img_stats, i + 1, 16))
+
+    # then crop all single stats from scrolled down view
+    for i in range(17):
+        if reverse_skip[1]:
+            if i not in indices_to_skip[1]:
+                continue
+        else:
+            if i in indices_to_skip[1]:
+                continue
+        images_stats.append(crop_single_stat(img_stats_scrolled_down, i + 1, 17))
 
     return images_stats
 

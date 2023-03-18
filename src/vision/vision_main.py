@@ -1,12 +1,59 @@
-import platform, time, pyautogui, pydirectinput
-from pynput.keyboard import Controller, KeyCode
-
+import platform, time, pyautogui
+import pynput.keyboard as keyboard, pynput.mouse as mouse
 from . import processing, util
 
 CURRENT_PLATFORM = platform.system()
 
 
-def screenshot_fifa(wait_time=1, player=True):
+def screenshot_fifa(player=True, current_fifa='FIFA 23', wait_time=1.5):
+    """
+    Takes one or more screenshots in FIFA 22, depending on the player variable.
+    It first opens FIFA, then waits the given wait time in seconds and returns the taken screenshots.
+
+    Parameters:
+        player(bool): defines if the screenshot is taken in the match or player screen
+        current_fifa(string): current name/version of fifa to take screenshots from
+        wait_time(float): wait time after application was opened and first screenshot is taken
+
+    Returns:
+        screenshots: single screenshot when match screen,
+                     list of screenshots when player screen
+    """
+    mouse_controller = mouse.Controller()
+
+    if(CURRENT_PLATFORM == "Windows"): # focus to window only works on windows for now
+        util.focus_to_window(current_fifa)
+
+    time.sleep(wait_time)
+
+    if not player:
+        return util.take_screenshot(0.5)
+
+    screenshots = []
+
+    for i in range(5):
+        sc1 = util.take_screenshot(0.7)
+        if i == 0: # for the summary screen one screenshot is enough
+            screenshots.append(sc1)
+            util.keyboard_press('c')
+            continue
+
+        # for the other screens we need to scroll down to see all data
+        mouse_controller.position = (3640, 640)
+        util.mouse_move_down_with_click(mouse.Button.left, 500)
+        
+        sc2 = util.take_screenshot(0.7)
+        screenshots.append([sc1, sc2])
+        util.keyboard_press('c')
+
+    # press c once more to return to default view
+    time.sleep(0.5)
+    util.keyboard_press('c')
+
+    return screenshots
+
+
+def screenshot_fifa_22(wait_time=1, player=True):
     """
     Takes one or more screenshots in FIFA 22, depending on the player variable.
     It first opens FIFA, then waits the given wait time in seconds and returns the taken screenshots.
@@ -20,7 +67,7 @@ def screenshot_fifa(wait_time=1, player=True):
         screenshots: single screenshot when match screen,
                      dictionary with name and screenshots when player screen
     """
-    keyboard = Controller()
+    keyboard = keyboard.Controller()
 
     if(CURRENT_PLATFORM == "Windows"): # focus to window only works on windows for now
         util.focus_to_window('FIFA 22')
@@ -44,7 +91,7 @@ def screenshot_fifa(wait_time=1, player=True):
     keyboard.release('c')
 
     return screenshots
-    
+
 
 def process_screenshots(screenshots, path='C:\\Program Files\\Tesseract-OCR\\tesseract'):
     """
@@ -75,23 +122,3 @@ def process_screenshots(screenshots, path='C:\\Program Files\\Tesseract-OCR\\tes
 
     return [game_dict, player_dicts], misreads
     
-
-
-# main function for testing
-# if __name__ == "__main__":
-    # processing.set_tesseract_path('C:\\Program Files\\Tesseract-OCR\\tesseract')
-    # screenshots = [0, {}]
-    # screenshots[0] = screenshot_fifa(player=False)
-    # input("taken 1")
-    # screenshots[1]["Timbo"] =  (screenshot_fifa())
-    # input("taken 2")
-    # screenshots[1]["Jutte"] =  (screenshot_fifa())
-    # input("taken 3")
-    # screenshots[1]["Tommus"] =  (screenshot_fifa())
-    # input("taken 4")
-    # screenshots[1]["DJ"] =  (screenshot_fifa())
-    # input("taken 5")
-    # screenshots[1]["Basti"] =  (screenshot_fifa())
-    # start = time.time()
-    # print(process_screenshots(screenshots))
-    # print("time: " + str(time.time() - start))
