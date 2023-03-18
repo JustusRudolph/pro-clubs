@@ -50,3 +50,11 @@ DIVISION_DATA = {
     "TITLE": 23
   },
 }
+
+
+def is_valid_division(div):
+  return (div >= 1) and (div <= 10)
+
+def is_valid_n_games(n_games):
+  # before a game, can't have already played 10 games
+  return (n_games >= 0) and (n_games <= 9)
