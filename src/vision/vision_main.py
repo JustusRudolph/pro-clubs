@@ -5,7 +5,7 @@ from . import processing, util
 CURRENT_PLATFORM = platform.system()
 
 
-def screenshot_fifa(player=True, current_fifa='FIFA 23', wait_time=1.5):
+def screenshot_fifa(player=True, current_fifa='FIFA 23', wait_time=0.3):
     """
     Takes one or more screenshots in FIFA 22, depending on the player variable.
     It first opens FIFA, then waits the given wait time in seconds and returns the taken screenshots.
@@ -27,12 +27,12 @@ def screenshot_fifa(player=True, current_fifa='FIFA 23', wait_time=1.5):
     time.sleep(wait_time)
 
     if not player:
-        return util.take_screenshot(0.5)
+        return util.take_screenshot(0.3)
 
     screenshots = []
 
     for i in range(5):
-        sc1 = util.take_screenshot(0.7)
+        sc1 = util.take_screenshot(0.3)
         if i == 0: # for the summary screen one screenshot is enough
             screenshots.append(sc1)
             util.keyboard_press('c')
@@ -40,14 +40,14 @@ def screenshot_fifa(player=True, current_fifa='FIFA 23', wait_time=1.5):
 
         # for the other screens we need to scroll down to see all data
         mouse_controller.position = (3640, 640)
-        util.mouse_move_down_with_click(mouse.Button.left, 500)
+        util.mouse_move_down_while_pressed(mouse.Button.left, 500)
         
-        sc2 = util.take_screenshot(0.7)
+        sc2 = util.take_screenshot(0.3)
         screenshots.append([sc1, sc2])
         util.keyboard_press('c')
 
     # press c once more to return to default view
-    time.sleep(0.5)
+    time.sleep(0.1)
     util.keyboard_press('c')
 
     return screenshots

@@ -47,7 +47,7 @@ def mouse_click(btn, wait_time=0.1):
     MOUSE_CONTROLLER.release(btn)
 
 
-def mouse_move_down_with_click(btn, pixel_amount, wait_time=0.1):
+def mouse_move_down_while_pressed(btn, pixel_amount, wait_time=0.1):
     """
     Simulates moving the mouse down while a button is pressed.
     """
