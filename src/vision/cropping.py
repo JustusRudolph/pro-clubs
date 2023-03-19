@@ -4,7 +4,7 @@ crop_data_dict = {
     "RATING": [3.45, 5.22, 3.13, 4.1],
     "NAME": [7.5, 5.5, 3.8, 4],
     "CARD_AREA": [6, 3.8, 5.9, 3.7],
-    "PLAYER_SUMMARY": [1.12, 3.78, 1.08, 1.14],
+    "PLAYER_SUMMARY": [1.12, 3.78, 1.09, 1.14],
     "PLAYER_SPECIFICS": [1.09, 3.3, 1.06, 1.14],
     "PLAYER_SPECIFICS_SCROLLED_DOWN": [1.09, 3.66, 1.06, 1.14],
     "HOME_DATA": [2.9, 4.35, 2.58, 1.1],
