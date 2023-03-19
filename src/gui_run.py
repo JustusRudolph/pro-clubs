@@ -12,7 +12,7 @@ from gui import helper
 CURRENT_PLATFORM = platform.system()
 
 if (CURRENT_PLATFORM == "Windows"):  # vision currently only works on windows
-  from vision import vision
+  from vision import vision_main as vision
 
 class GUI:
   
@@ -638,11 +638,12 @@ class GUI:
         self.match_data = full_game_data[0]
         self.full_player_data = full_game_data[1]
 
-        if (len(self.misreads) != 0):  # have some undetermined parameters
-          self.curr_state = "Screenshot-check"  # set -1s to actual values
-          self.layout = self.create_screenshot_error_layout()
-          self.update_window()
-          return 0  # back out to show function
+        # Currently it does not work
+        # if (len(self.misreads) != 0):  # have some undetermined parameters
+        #   self.curr_state = "Screenshot-check"  # set -1s to actual values
+        #   self.layout = self.create_screenshot_error_layout()
+        #   self.update_window()
+        #   return 0  # back out to show function
         
         # if no misreads, then we can set the
         self.game.add_match_data(self.match_data.copy())
@@ -652,7 +653,7 @@ class GUI:
 
       if (CURRENT_PLATFORM == "Windows"):
         # reset the screenshots for next game
-        self.all_screenshots = []
+        self.all_screenshots = [0, {}]
 
       self.curr_state = "Pre-Game"
       new_layout = self.create_pre_game_layout()  # go back to pregame
