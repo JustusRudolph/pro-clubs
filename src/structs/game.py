@@ -246,5 +246,5 @@ class Game:
     for player in self.player_names:
       player_path = FULL_PLAYER_DATA_PATH + player + ".json"
       player_match_data = read_json(player_path)
-      player_match_data["GAME_ID"].append(self.dict_to_write["ID"])
+      player_match_data["GAME_ID"].append(self.dict_to_write["GAME_ID"])
       write_json(player_match_data, player_path)
